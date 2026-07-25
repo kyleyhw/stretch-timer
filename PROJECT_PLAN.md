@@ -50,8 +50,8 @@ Fixed engineering decisions (rationale in [`docs/`](docs/index.md)):
 
 ## Phase 5: Cues & minimal settings
 
-17. [pending] `js/cues.js` — Web Audio unlock on Start, end beep + count-in ticks, `navigator.vibrate`, Screen Wake Lock.
-18. [pending] Minimal inline settings (prep length, sound on/off); verify iOS audio-unlock + backgrounded beep; commit + push.
+17. [completed] `js/cues.js` — Web Audio unlock on Start, audio-clock-scheduled end beep + count-in ticks, `navigator.vibrate`, Screen Wake Lock (all feature-detected).
+18. [completed] Settings view (`js/views/settings.js`) + `js/settings.js` (prep/switch/sound/count-in/vibration/keep-awake); verified in Chromium (audio unlock, applied settings, no errors); commit + push.
 
 ## Phase 6: Editor & persistence
 

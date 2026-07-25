@@ -9,7 +9,12 @@ import { routineHoldSeconds } from '../data.js';
 
 /**
  * @param {HTMLElement} container
- * @param {{ routines: Routine[], onOpen: (id: string) => void, onNew?: () => void }} ctx
+ * @param {{
+ *   routines: Routine[],
+ *   onOpen: (id: string) => void,
+ *   onNew?: () => void,
+ *   onSettings?: () => void,
+ * }} ctx
  * @returns {void}
  */
 export function mountHome(container, ctx) {
@@ -46,10 +51,17 @@ export function mountHome(container, ctx) {
     }),
   );
 
+  const titleRow = el('div', { class: 'home-title-row' }, el('h1', { text: 'Stretch Timer' }));
+  if (ctx.onSettings) {
+    const gear = el('button', { class: 'icon-btn', 'aria-label': 'Settings', text: '⚙' });
+    gear.addEventListener('click', ctx.onSettings);
+    titleRow.append(gear);
+  }
+
   const header = el(
     'header',
     { class: 'home-header' },
-    el('h1', { text: 'Stretch Timer' }),
+    titleRow,
     el('p', { class: 'home-sub', text: 'Pick a routine to begin.' }),
   );
 
