@@ -5,14 +5,15 @@ and the [development plan](../PROJECT_PLAN.md) for status.
 
 ## Contents
 
-| Document                         | Purpose                                                                    | Status      |
-| -------------------------------- | -------------------------------------------------------------------------- | ----------- |
-| `architecture.md`                | Module structure, hash routing, state-driven rendering                     | forthcoming |
-| [`timer-math.md`](timer-math.md) | Drift-free countdown derivation, pause/resume invariant, display rule      | available   |
-| `data-model.md`                  | Stretch/routine JSON schema, `localStorage` layout, session step-expansion | forthcoming |
+| Document                         | Purpose                                                               | Status      |
+| -------------------------------- | --------------------------------------------------------------------- | ----------- |
+| `architecture.md`                | Module structure, hash routing, state-driven rendering                | forthcoming |
+| [`timer-math.md`](timer-math.md) | Drift-free countdown derivation, pause/resume invariant, display rule | available   |
+| [`data-model.md`](data-model.md) | Stretch/routine schema, session expansion, progress & reconciliation  | available   |
 
 ## Test reports
 
 Unit-test reports (with runtimes) live in [`../tests/reports/`](../tests/reports/):
 
 - [`timer.md`](../tests/reports/timer.md) — countdown engine (9 tests, drift analysis)
+- [`session.md`](../tests/reports/session.md) — session state machine (12 tests)

@@ -34,9 +34,9 @@ Fixed engineering decisions (rationale in [`docs/`](docs/index.md)):
 
 ## Phase 2: Session state machine
 
-10. [pending] `docs/data-model.md`: routine→steps expansion, per-side flow, progress fraction, background reconciliation.
-11. [pending] `js/session.js` — step expansion + state machine (prep/hold/switch/skip/reconcile), JSDoc-typed.
-12. [pending] `tests/session.test.js` + `tests/reports/session.md`; typecheck + tests green; commit + push.
+10. [completed] `docs/data-model.md`: routine→steps expansion, per-side flow, progress fraction, background reconciliation.
+11. [completed] `js/session.js` — step expansion + state machine (prep/hold/switch/skip/reconcile), JSDoc-typed.
+12. [completed] `tests/session.test.js` + `tests/reports/session.md`; typecheck + tests green; commit + push.
 
 ## Phase 3: App shell & player UI
 

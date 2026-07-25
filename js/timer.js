@@ -122,6 +122,24 @@ export class Countdown {
   }
 
   /**
+   * Re-anchors the countdown to a specific remaining time (a seek). Clears the completed flag so
+   * the countdown can run again. While running, it adjusts the target relative to now; while
+   * paused or stopped, it updates the stored remaining used on the next resume. Used by the
+   * session layer to skip between steps.
+   * @param {number} remainingMs Clamped to >= 0.
+   * @returns {void}
+   */
+  setRemaining(remainingMs) {
+    const r = Math.max(0, remainingMs);
+    this._completed = false;
+    if (this._running) {
+      this._endAt = this._now() + r;
+    } else {
+      this._remaining = r;
+    }
+  }
+
+  /**
    * Starts (or restarts) the countdown from its full duration, emitting an immediate tick so
    * the UI shows the full duration at once.
    * @returns {void}
