@@ -1,0 +1,31 @@
+{
+  "name": "stretch-timer",
+  "version": "0.1.0",
+  "description": "A guided stretching-timer PWA that counts down each stretch hold with audio and haptic cues. Built as a dependency-free, installable web app that runs offline on desktop and mobile.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kyleyhw/stretch-timer.git"
+  },
+  "homepage": "https://kyleyhw.github.io/stretch-timer/",
+  "keywords": [
+    "stretching",
+    "timer",
+    "pwa",
+    "offline",
+    "mobile"
+  ],
+  "author": "kyleyhw",
+  "license": "ISC",
+  "devDependencies": {
+    "prettier": "^3.9.6",
+    "typescript": "^7.0.2"
+  }
+}
