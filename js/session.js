@@ -348,4 +348,13 @@ export class Session {
     this._paused = false;
     if (this._cb.onQuit) this._cb.onQuit();
   }
+
+  /**
+   * Stop timing without firing any callback. For teardown when a view unmounts.
+   * @returns {void}
+   */
+  dispose() {
+    this._cd.stop();
+    this._paused = false;
+  }
 }

@@ -40,8 +40,8 @@ Fixed engineering decisions (rationale in [`docs/`](docs/index.md)):
 
 ## Phase 3: App shell & player UI
 
-13. [pending] `index.html`, `css/styles.css` (mobile-first, safe-area), `js/router.js` (hash), `js/ui.js`, `js/app.js`.
-14. [pending] `js/views/player.js` wired to `session` + `timer` against a hardcoded routine; manual verification; commit + push.
+13. [completed] `index.html`, `css/styles.css` (mobile-first, safe-area), `js/router.js` (hash), `js/ui.js`, `js/app.js`.
+14. [completed] `js/views/player.js` wired to `session` + `timer` against a hardcoded routine; manual verification (Playwright); commit + push.
 
 ## Phase 4: Built-in content & browsing
 
