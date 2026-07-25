@@ -27,10 +27,10 @@ Fixed engineering decisions (rationale in [`docs/`](docs/index.md)):
 
 ## Phase 1: Timer engine (correctness core)
 
-6. [pending] `docs/timer-math.md`: derive drift-free countdown, pause/resume invariant, `Math.ceil` display rule.
-7. [pending] `js/timer.js` — timestamp-based countdown engine, JSDoc-typed.
-8. [pending] `tests/timer.test.js` (`node:test`): accuracy, monotonicity, pause/resume; drift visualization vs. naive decrement.
-9. [pending] `tests/reports/timer.md` (runtime, what/why/data rationale); typecheck + tests green; commit + push.
+6. [completed] `docs/timer-math.md`: derive drift-free countdown, pause/resume invariant, `Math.ceil` display rule.
+7. [completed] `js/timer.js` — timestamp-based countdown engine, JSDoc-typed.
+8. [completed] `tests/timer.test.js` (`node:test`): accuracy, monotonicity, pause/resume; drift visualization vs. naive decrement.
+9. [completed] `tests/reports/timer.md` (runtime, what/why/data rationale); typecheck + tests green; commit + push.
 
 ## Phase 2: Session state machine
 
