@@ -12,6 +12,7 @@
   --hold: #059669;
   --prep: #d97706;
   --switch: #7c3aed;
+  --danger: #dc2626;
   --radius: 14px;
   --gap: 16px;
   --tap: 48px;
@@ -434,4 +435,129 @@ button {
 
 .toggle-input:checked + .toggle-track::after {
   transform: translateX(20px);
+}
+
+/* --- Editor --- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.field-input {
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--surface-2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  min-height: var(--tap);
+}
+
+.field-input.field-error {
+  border-color: var(--danger);
+}
+
+.editor-subhead {
+  font-size: 1rem;
+  margin: 8px 0 0;
+}
+
+.editor-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.editor-empty {
+  color: var(--muted);
+}
+
+.editor-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+.editor-item-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-item-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.sec-input {
+  width: 5ch;
+  font: inherit;
+  text-align: right;
+  color: var(--text);
+  background: var(--surface-2);
+  border: none;
+  border-radius: 6px;
+  padding: 6px;
+}
+
+.sec-unit {
+  color: var(--muted);
+  margin-right: 4px;
+}
+
+.mini-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  font-size: 0.95rem;
+}
+
+.editor-add {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.editor-add .field-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.editor-add .ctrl-btn {
+  flex-shrink: 0;
+}
+
+.editor-error {
+  color: var(--danger);
+  min-height: 1.2em;
+  margin: 4px 0 0;
+}
+
+.ctrl-btn.danger {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+
+.editor-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }

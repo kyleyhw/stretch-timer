@@ -31,6 +31,46 @@ export function getUserRoutines() {
   return userRoutines;
 }
 
+/** @type {(list: Routine[]) => void} */
+let persist = () => {};
+
+/**
+ * Register a persistence sink, called with the full user-routine list after every mutation.
+ * @param {(list: Routine[]) => void} sink
+ * @returns {void}
+ */
+export function setPersist(sink) {
+  persist = sink;
+}
+
+/**
+ * Insert or replace a user routine by id, then persist.
+ * @param {Routine} routine
+ * @returns {void}
+ */
+export function upsertUserRoutine(routine) {
+  const exists = userRoutines.some((r) => r.id === routine.id);
+  userRoutines = exists
+    ? userRoutines.map((r) => (r.id === routine.id ? routine : r))
+    : [...userRoutines, routine];
+  persist(userRoutines);
+}
+
+/**
+ * Delete a user routine by id, then persist.
+ * @param {string} id
+ * @returns {void}
+ */
+export function deleteUserRoutine(id) {
+  userRoutines = userRoutines.filter((r) => r.id !== id);
+  persist(userRoutines);
+}
+
+/** @returns {string} A fresh unique user-routine id. */
+export function makeUserId() {
+  return `user-${crypto.randomUUID()}`;
+}
+
 /** @returns {Routine[]} Built-in routines followed by user routines. */
 export function getAllRoutines() {
   return [...BUILTIN_ROUTINES, ...userRoutines];
@@ -47,6 +87,11 @@ export function getRoutineById(id) {
 /** @returns {Record<string, Stretch>} The stretch library keyed by id. */
 export function getStretchMap() {
   return stretchById;
+}
+
+/** @returns {Stretch[]} The full stretch library. */
+export function getAllStretches() {
+  return STRETCHES;
 }
 
 /**

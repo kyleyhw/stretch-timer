@@ -55,8 +55,8 @@ Fixed engineering decisions (rationale in [`docs/`](docs/index.md)):
 
 ## Phase 6: Editor & persistence
 
-19. [pending] `js/store.js` — versioned `localStorage` with in-memory fallback.
-20. [pending] `js/views/editor.js` — create/edit/reorder/delete user routines; duplicate-to-edit for built-ins; commit + push.
+19. [completed] `js/store.js` — versioned `localStorage` with in-memory fallback (5 unit tests); wired into `data.js`/`settings.js`.
+20. [completed] `js/views/editor.js` — create/edit/reorder/delete user routines; duplicate-to-edit for built-ins; verified persistence + delete in Chromium; commit + push.
 
 ## Phase 7: PWA, offline & install
 
