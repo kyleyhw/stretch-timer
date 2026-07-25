@@ -522,8 +522,8 @@ button {
 }
 
 .mini-btn {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   border-radius: 8px;
   background: var(--surface-2);
   font-size: 0.95rem;
@@ -575,4 +575,43 @@ button {
   font-weight: 600;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
   z-index: 10;
+}
+
+/* --- Modal --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 20;
+}
+
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.modal-msg {
+  margin: 0 0 16px;
+  font-size: 1.05rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* --- Reduced motion --- */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
 }

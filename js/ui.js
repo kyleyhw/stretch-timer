@@ -65,3 +65,45 @@ export function fmtClock(totalSeconds) {
   const m = Math.floor(s / 60);
   return `${m}:${String(s % 60).padStart(2, '0')}`;
 }
+
+/**
+ * Show a modal confirmation dialog. Resolves true if confirmed, false on cancel / backdrop /
+ * Escape.
+ * @param {string} message
+ * @param {string} [confirmText]
+ * @returns {Promise<boolean>}
+ */
+export function confirmModal(message, confirmText = 'Confirm') {
+  return new Promise((resolve) => {
+    const cancel = el('button', { class: 'ctrl-btn', text: 'Cancel' });
+    const ok = el('button', { class: 'ctrl-btn danger', text: confirmText });
+    const overlay = el(
+      'div',
+      { class: 'modal-overlay' },
+      el(
+        'div',
+        { class: 'modal', role: 'dialog', 'aria-modal': 'true' },
+        el('p', { class: 'modal-msg', text: message }),
+        el('div', { class: 'modal-actions' }, cancel, ok),
+      ),
+    );
+    /** @param {KeyboardEvent} e */
+    const onKey = (e) => {
+      if (e.key === 'Escape') finish(false);
+    };
+    /** @param {boolean} value */
+    const finish = (value) => {
+      overlay.remove();
+      document.removeEventListener('keydown', onKey);
+      resolve(value);
+    };
+    cancel.addEventListener('click', () => finish(false));
+    ok.addEventListener('click', () => finish(true));
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) finish(false);
+    });
+    document.addEventListener('keydown', onKey);
+    document.body.append(overlay);
+    ok.focus();
+  });
+}

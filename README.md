@@ -61,9 +61,9 @@ stretch-timer/
 ## Documentation index
 
 - [`docs/index.md`](docs/index.md) — documentation hub
-- `docs/architecture.md` — module structure and view routing _(forthcoming)_
-- `docs/timer-math.md` — drift-free countdown derivation _(forthcoming)_
-- `docs/data-model.md` — stretch/routine schema and session expansion _(forthcoming)_
+- [`docs/architecture.md`](docs/architecture.md) — module layers, routing, rendering, PWA
+- [`docs/timer-math.md`](docs/timer-math.md) — drift-free countdown derivation
+- [`docs/data-model.md`](docs/data-model.md) — stretch/routine schema and session expansion
 
 ## Core logic and mathematics
 
@@ -95,3 +95,15 @@ python3 -m http.server # serve locally at http://localhost:8000 (SW + ES modules
 `file://` will not work (ES-module CORS and no service worker) — always use a local server. To
 reproduce the GitHub Pages subpath, serve the parent directory and browse to
 `http://localhost:8000/stretch-timer/`.
+
+## Install and deploy
+
+- **Install to a device:** open the app in a browser and use the address-bar install icon
+  (desktop / Android) or Safari's Share → _Add to Home Screen_ (iOS). It then launches
+  standalone and works offline.
+- **Deploy to GitHub Pages:** enable Pages once (repository Settings → Pages → source **GitHub
+  Actions**). The workflow in [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml)
+  then publishes the repository root on every push to the default branch, serving the app at
+  `https://kyleyhw.github.io/stretch-timer/`. All URLs are relative and the service-worker scope is
+  the subpath, so no configuration depends on the repository name. The `.nojekyll` file keeps Pages
+  from processing the source.

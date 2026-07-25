@@ -5,7 +5,7 @@
  * clock (see js/cues.js) so they survive a backgrounded tab.
  */
 
-import { el, clear, fmtClock } from '../ui.js';
+import { el, clear, fmtClock, confirmModal } from '../ui.js';
 import { Session } from '../session.js';
 import { cues, haptics, wakeLock } from '../cues.js';
 
@@ -32,6 +32,17 @@ export function mountPlayer(container, ctx) {
   const settings = ctx.settings;
 
   const progressFill = el('div', { class: 'progress-fill' });
+  const progressBar = el(
+    'div',
+    {
+      class: 'progress-bar',
+      role: 'progressbar',
+      'aria-label': 'Routine progress',
+      'aria-valuemin': '0',
+      'aria-valuemax': '100',
+    },
+    progressFill,
+  );
   const routineName = el('span', { class: 'routine-name', text: ctx.routine.name });
   const progressCount = el('span', { class: 'progress-count' });
   const phaseLabel = el('p', { class: 'phase-label', 'aria-live': 'polite' });
@@ -53,7 +64,7 @@ export function mountPlayer(container, ctx) {
     'section',
     { class: 'view view-player' },
     el('header', { class: 'player-header' }, routineName, progressCount, quitBtn),
-    el('div', { class: 'progress-bar' }, progressFill),
+    progressBar,
     phaseLabel,
     stretchName,
     stretchDesc,
@@ -79,7 +90,9 @@ export function mountPlayer(container, ctx) {
     },
     onTick: (remMs, step, info) => {
       countdown.textContent = fmtClock(Math.ceil(remMs / 1000));
-      progressFill.style.width = `${(info.fraction * 100).toFixed(1)}%`;
+      const pct = info.fraction * 100;
+      progressFill.style.width = `${pct.toFixed(1)}%`;
+      progressBar.setAttribute('aria-valuenow', String(Math.round(pct)));
       if (info.stepIndex !== cueStep) {
         cueStep = info.stepIndex;
         cues.scheduleStep(remMs / 1000, {
@@ -123,7 +136,17 @@ export function mountPlayer(container, ctx) {
   prevBtn.addEventListener('click', () => session.prev());
   nextBtn.addEventListener('click', () => session.next());
   toggleBtn.addEventListener('click', () => session.togglePause());
-  quitBtn.addEventListener('click', () => session.quit());
+  quitBtn.addEventListener('click', async () => {
+    if (session.completed) {
+      ctx.onExit();
+      return;
+    }
+    const wasPaused = session.paused;
+    if (!wasPaused) session.pause();
+    const confirmed = await confirmModal('Quit this routine?', 'Quit');
+    if (confirmed) session.quit();
+    else if (!wasPaused) session.resume();
+  });
 
   const onVisibility = () => {
     if (document.visibilityState === 'visible') {
@@ -134,10 +157,20 @@ export function mountPlayer(container, ctx) {
   };
   document.addEventListener('visibilitychange', onVisibility);
 
+  /** @param {BeforeUnloadEvent} e */
+  const onBeforeUnload = (e) => {
+    if (!session.completed) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  };
+  window.addEventListener('beforeunload', onBeforeUnload);
+
   session.start();
 
   return () => {
     document.removeEventListener('visibilitychange', onVisibility);
+    window.removeEventListener('beforeunload', onBeforeUnload);
     cues.cancel();
     void wakeLock.release();
     session.dispose();

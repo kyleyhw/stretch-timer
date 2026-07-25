@@ -5,11 +5,11 @@ and the [development plan](../PROJECT_PLAN.md) for status.
 
 ## Contents
 
-| Document                         | Purpose                                                               | Status      |
-| -------------------------------- | --------------------------------------------------------------------- | ----------- |
-| `architecture.md`                | Module structure, hash routing, state-driven rendering                | forthcoming |
-| [`timer-math.md`](timer-math.md) | Drift-free countdown derivation, pause/resume invariant, display rule | available   |
-| [`data-model.md`](data-model.md) | Stretch/routine schema, session expansion, progress & reconciliation  | available   |
+| Document                             | Purpose                                                               | Status    |
+| ------------------------------------ | --------------------------------------------------------------------- | --------- |
+| [`architecture.md`](architecture.md) | Module structure, hash routing, rendering, PWA                        | available |
+| [`timer-math.md`](timer-math.md)     | Drift-free countdown derivation, pause/resume invariant, display rule | available |
+| [`data-model.md`](data-model.md)     | Stretch/routine schema, session expansion, progress & reconciliation  | available |
 
 ## Test reports
 

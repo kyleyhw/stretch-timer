@@ -65,6 +65,6 @@ Fixed engineering decisions (rationale in [`docs/`](docs/index.md)):
 
 ## Phase 8: Polish, accessibility & deploy
 
-23. [pending] Responsive tuning, ≥44 px targets, ARIA live regions, `prefers-reduced-motion`, quit confirmation.
-24. [pending] Finalize `docs/` (architecture, math, data model) and `README.md` (ASCII tree, docs index, math overview) with cross-links.
-25. [pending] Enable GitHub Pages; verify at `https://kyleyhw.github.io/stretch-timer/`; final commit + push.
+23. [completed] Mobile-first responsive layout, ≥44 px targets, ARIA live regions + `progressbar`, `prefers-reduced-motion`, quit-confirm modal, unload guard.
+24. [completed] Finalized `docs/` (architecture, timer-math, data-model) and `README.md` (ASCII tree, docs index, math overview, install/deploy) with cross-links.
+25. [completed] Added GitHub Pages deploy workflow (`.github/workflows/deploy-pages.yml`); verified relative-path + service-worker scope at the `/stretch-timer/` subpath in Chromium. **Remaining one-time user step:** enable Pages (Settings → Pages → source: GitHub Actions) and merge to the default branch to go live.
