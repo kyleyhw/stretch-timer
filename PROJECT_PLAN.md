@@ -45,8 +45,8 @@ Fixed engineering decisions (rationale in [`docs/`](docs/index.md)):
 
 ## Phase 4: Built-in content & browsing
 
-15. [pending] `js/seed.js` (~20–30 stretches, 4 routines) and `js/data.js` (built-in ⊕ user merge, id resolution).
-16. [pending] `js/views/home.js`, `js/views/routineDetail.js` → launch real sessions; commit + push.
+15. [completed] `js/seed.js` (25 stretches, 4 routines) and `js/data.js` (built-in ⊕ user merge, id resolution).
+16. [completed] `js/views/home.js`, `js/views/routineDetail.js` → launch real sessions; commit + push.
 
 ## Phase 5: Cues & minimal settings
 
