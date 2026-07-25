@@ -60,8 +60,8 @@ Fixed engineering decisions (rationale in [`docs/`](docs/index.md)):
 
 ## Phase 7: PWA, offline & install
 
-21. [pending] `manifest.webmanifest` (relative `start_url`/`scope`) and icons (192/512/maskable/apple-touch).
-22. [pending] `sw.js` cache-first app shell + navigation fallback + versioned cache/update prompt; register in `app.js`; verify offline + install; commit + push.
+21. [completed] `manifest.webmanifest` (relative `start_url`/`scope`) and icons (192/512/maskable/apple-touch, rendered stopwatch glyph).
+22. [completed] `sw.js` cache-first app shell + navigation fallback + versioned cache/update prompt (typed via `tsconfig.sw.json`); registered in `app.js`; verified offline shell + deep link in Chromium; commit + push.
 
 ## Phase 8: Polish, accessibility & deploy
 

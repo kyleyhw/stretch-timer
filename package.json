@@ -5,7 +5,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.tests.json",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.tests.json && tsc -p tsconfig.sw.json",
     "test": "node --test",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

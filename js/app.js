@@ -149,3 +149,38 @@ function renderNotFound() {
 }
 
 router.start();
+
+registerServiceWorker();
+
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return;
+    refreshing = true;
+    location.reload();
+  });
+  navigator.serviceWorker
+    .register('sw.js')
+    .then((reg) => {
+      reg.addEventListener('updatefound', () => {
+        const installing = reg.installing;
+        if (!installing) return;
+        installing.addEventListener('statechange', () => {
+          if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+            showUpdateToast(reg);
+          }
+        });
+      });
+    })
+    .catch(() => {
+      /* offline or unsupported — the app still works */
+    });
+}
+
+/** @param {ServiceWorkerRegistration} reg @returns {void} */
+function showUpdateToast(reg) {
+  const toast = el('button', { class: 'toast', text: 'Update available — tap to refresh' });
+  toast.addEventListener('click', () => reg.waiting?.postMessage('SKIP_WAITING'));
+  document.body.append(toast);
+}
