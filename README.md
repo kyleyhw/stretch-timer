@@ -3,9 +3,11 @@
 A guided stretching-timer web app: pick a routine and it counts down each stretch with audio and
 haptic cues. Installable, works offline, runs on desktop and mobile.
 
+**▶ [Open the app](https://kyleyhw.github.io/stretch-timer/)** — live on GitHub Pages.
+
 ## How to run
 
-- **Hosted:** open `https://kyleyhw.github.io/stretch-timer/` (once GitHub Pages is enabled).
+- **Hosted:** open **[kyleyhw.github.io/stretch-timer](https://kyleyhw.github.io/stretch-timer/)**.
   On mobile, use the browser's _Add to Home Screen_ to install it; it then works offline.
 - **Locally:** from the repo root, start any static server and open it in a browser:
   ```bash
