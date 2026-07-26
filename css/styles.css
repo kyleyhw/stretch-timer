@@ -18,29 +18,27 @@
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.15);
 
-  /* Warm coral → amber accent */
-  --accent: #ff7a59;
-  --accent-2: #ffb454;
-  --accent-strong: #ff6842;
-  --on-accent: #2a1206;
+  /* Muted warm accent (flat) */
+  --accent: #d1785e;
+  --accent-strong: #bd6a51;
+  --on-accent: #1b0d06;
 
-  /* Phase hues */
-  --prep: #ffb454;
-  --hold: #ff7a59;
-  --switch: #5ec8c0;
-  --done: #7ed891;
-  --danger: #ff6b6b;
+  /* Phase hues (muted, distinct at a glance) */
+  --prep: #cfa06b;
+  --hold: #d1785e;
+  --switch: #6faca4;
+  --done: #83b88d;
+  --danger: #cf7a7a;
 
   /* Radius */
   --r-sm: 10px;
-  --r-md: 16px;
-  --r-lg: 22px;
+  --r-md: 14px;
+  --r-lg: 18px;
   --r-pill: 999px;
 
-  /* Elevation */
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35);
-  --shadow-2: 0 10px 30px rgba(0, 0, 0, 0.45);
-  --glow: 0 0 0 1px var(--border), 0 8px 30px rgba(255, 122, 89, 0.12);
+  /* Elevation — flat 2D: separation comes from borders, not shadows */
+  --shadow-1: none;
+  --shadow-2: none;
 
   /* Motion */
   --dur-1: 120ms;
@@ -54,45 +52,47 @@
 
 :root[data-theme='light'] {
   color-scheme: light;
-  --bg: #faf5ee;
+  --bg: #f7f3ec;
   --surface: #ffffff;
-  --surface-2: #f1ebe1;
+  --surface-2: #efe9df;
   --elevated: #ffffff;
   --text: #241c15;
   --muted: #6f655a;
-  --border: rgba(0, 0, 0, 0.08);
+  --border: rgba(0, 0, 0, 0.09);
   --border-strong: rgba(0, 0, 0, 0.16);
-  --accent: #e8613c;
-  --accent-2: #f59e0b;
-  --accent-strong: #d84e2a;
+  --accent: #bd6349;
+  --accent-strong: #a5523b;
   --on-accent: #fff7f2;
-  --prep: #d98324;
-  --switch: #2f9c94;
-  --shadow-1: 0 1px 2px rgba(60, 40, 20, 0.1);
-  --shadow-2: 0 12px 30px rgba(60, 40, 20, 0.14);
-  --glow: 0 0 0 1px var(--border), 0 8px 30px rgba(232, 97, 60, 0.14);
+  --prep: #a9762f;
+  --hold: #bd6349;
+  --switch: #3a8f87;
+  --done: #4f9a63;
+  --danger: #c0574f;
+  --shadow-1: none;
+  --shadow-2: none;
 }
 
 @media (prefers-color-scheme: light) {
   :root[data-theme='system'] {
     color-scheme: light;
-    --bg: #faf5ee;
+    --bg: #f7f3ec;
     --surface: #ffffff;
-    --surface-2: #f1ebe1;
+    --surface-2: #efe9df;
     --elevated: #ffffff;
     --text: #241c15;
     --muted: #6f655a;
-    --border: rgba(0, 0, 0, 0.08);
+    --border: rgba(0, 0, 0, 0.09);
     --border-strong: rgba(0, 0, 0, 0.16);
-    --accent: #e8613c;
-    --accent-2: #f59e0b;
-    --accent-strong: #d84e2a;
+    --accent: #bd6349;
+    --accent-strong: #a5523b;
     --on-accent: #fff7f2;
-    --prep: #d98324;
-    --switch: #2f9c94;
-    --shadow-1: 0 1px 2px rgba(60, 40, 20, 0.1);
-    --shadow-2: 0 12px 30px rgba(60, 40, 20, 0.14);
-    --glow: 0 0 0 1px var(--border), 0 8px 30px rgba(232, 97, 60, 0.14);
+    --prep: #a9762f;
+    --hold: #bd6349;
+    --switch: #3a8f87;
+    --done: #4f9a63;
+    --danger: #c0574f;
+    --shadow-1: none;
+    --shadow-2: none;
   }
 }
 
@@ -107,9 +107,7 @@ body {
 }
 
 body {
-  background:
-    radial-gradient(1200px 600px at 50% -10%, rgba(255, 122, 89, 0.08), transparent 60%), var(--bg);
-  background-attachment: fixed;
+  background: var(--bg);
   color: var(--text);
   font-family:
     system-ui,
@@ -183,16 +181,14 @@ button {
 
 .ctrl-btn.primary,
 .start-cta {
-  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  background: var(--accent);
   color: var(--on-accent);
   border: none;
-  box-shadow: var(--shadow-1);
 }
 
 .ctrl-btn.primary:hover,
 .start-cta:hover {
-  filter: brightness(1.05);
-  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  background: var(--accent-strong);
 }
 
 .ctrl-btn.danger {
@@ -269,16 +265,15 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  background: linear-gradient(180deg, var(--elevated), var(--surface));
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   padding: 18px;
-  box-shadow: var(--shadow-1);
   animation: card-in var(--dur-3) var(--ease) both;
   transition:
-    transform var(--dur-2) var(--spring),
+    transform var(--dur-1) var(--ease),
     border-color var(--dur-2) var(--ease),
-    box-shadow var(--dur-2) var(--ease);
+    background var(--dur-2) var(--ease);
 }
 
 .routine-list .routine-item:nth-child(1) {
@@ -312,13 +307,12 @@ button {
 }
 
 .routine-item--tappable:hover {
-  transform: translateY(-2px);
   border-color: var(--border-strong);
-  box-shadow: var(--shadow-2);
+  background: var(--elevated);
 }
 
 .routine-item--tappable:active {
-  transform: translateY(0) scale(0.99);
+  transform: scale(0.99);
 }
 
 .routine-meta {
@@ -555,25 +549,22 @@ button {
 .ring-track {
   fill: none;
   stroke: var(--surface-2);
-  stroke-width: 8;
+  stroke-width: 4;
 }
 
 .ring-arc {
   fill: none;
   stroke: var(--hold);
-  stroke-width: 8;
+  stroke-width: 4;
   stroke-linecap: round;
   transition: stroke var(--dur-2) var(--ease);
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--hold) 45%, transparent));
 }
 
 .view-player[data-phase='prep'] .ring-arc {
   stroke: var(--prep);
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--prep) 45%, transparent));
 }
 .view-player[data-phase='switch'] .ring-arc {
   stroke: var(--switch);
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--switch) 45%, transparent));
 }
 .view-player[data-phase='done'] .ring-arc {
   stroke: var(--done);
@@ -610,7 +601,7 @@ button {
 
 .countdown {
   font-size: clamp(3.6rem, 20vw, 5.4rem);
-  font-weight: 800;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   line-height: 1;
   letter-spacing: -0.03em;
@@ -818,12 +809,12 @@ button {
   height: 22px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: var(--shadow-1);
+  border: 1px solid rgba(0, 0, 0, 0.18);
   transition: transform var(--dur-2) var(--spring);
 }
 
 .toggle-input:checked + .toggle-track {
-  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  background: var(--accent);
   border-color: transparent;
 }
 
@@ -855,9 +846,8 @@ button {
 }
 
 .segmented-option.is-active {
-  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  background: var(--accent);
   color: var(--on-accent);
-  box-shadow: var(--shadow-1);
 }
 
 /* --- Editor --- */
@@ -1040,12 +1030,11 @@ button {
   left: 50%;
   transform: translateX(-50%);
   bottom: max(18px, env(safe-area-inset-bottom));
-  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  background: var(--accent);
   color: var(--on-accent);
   border-radius: var(--r-pill);
   padding: 12px 22px;
   font-weight: 700;
-  box-shadow: var(--shadow-2);
   z-index: 10;
   animation: toast-in var(--dur-3) var(--spring);
 }
