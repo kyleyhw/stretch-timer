@@ -1184,6 +1184,28 @@ button {
   padding: 8px 0 0;
 }
 
+textarea.field-input {
+  resize: vertical;
+  min-height: 3.5em;
+  font-family: inherit;
+}
+
+.share-link-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  margin-bottom: 10px;
+}
+
+.share-link-row .field-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.share-link-row .ctrl-btn {
+  flex-shrink: 0;
+}
+
 /* --- Reduced motion --- */
 @media (prefers-reduced-motion: reduce) {
   *,

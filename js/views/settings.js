@@ -20,7 +20,70 @@ import { stretchFormModal } from './stretchForm.js';
  * @property {(id: string) => boolean} isStretchInUse Whether a routine references the stretch.
  * @property {(stretch: Stretch) => void} onStretchSave Persist an edited custom stretch.
  * @property {(id: string) => void} onStretchDelete Delete a custom stretch.
+ * @property {(raw: string) => string | null} onImport Import a routine from link/JSON; error or null.
  */
+
+/**
+ * Modal to import a routine from a pasted link/JSON or a .json file.
+ * @param {(raw: string) => string | null} onImport
+ * @returns {void}
+ */
+function openImportModal(onImport) {
+  const textarea = /** @type {HTMLTextAreaElement} */ (
+    el('textarea', {
+      class: 'field-input',
+      rows: '4',
+      placeholder: 'Paste a share link or JSON',
+    })
+  );
+  const fileInput = /** @type {HTMLInputElement} */ (
+    el('input', { type: 'file', accept: '.json,application/json', class: 'field-input' })
+  );
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files && fileInput.files[0];
+    if (file) textarea.value = await file.text();
+  });
+
+  const err = el('p', { class: 'editor-error', role: 'alert' });
+  const cancel = el('button', { class: 'ctrl-btn', text: 'Cancel' });
+  const doImport = el('button', { class: 'ctrl-btn primary', text: 'Import' });
+
+  const overlay = el(
+    'div',
+    { class: 'modal-overlay' },
+    el(
+      'div',
+      { class: 'modal modal-form', role: 'dialog', 'aria-modal': 'true' },
+      el('h2', { class: 'modal-title', text: 'Import a routine' }),
+      textarea,
+      el('p', { class: 'settings-note', text: 'or choose a file' }),
+      fileInput,
+      err,
+      el('div', { class: 'modal-actions' }, cancel, doImport),
+    ),
+  );
+
+  const finish = () => {
+    overlay.remove();
+    document.removeEventListener('keydown', onKey);
+  };
+  /** @param {KeyboardEvent} e */
+  const onKey = (e) => {
+    if (e.key === 'Escape') finish();
+  };
+  cancel.addEventListener('click', finish);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) finish();
+  });
+  doImport.addEventListener('click', () => {
+    const error = onImport(textarea.value);
+    if (error) err.textContent = error;
+    else finish(); // success navigates away
+  });
+  document.addEventListener('keydown', onKey);
+  document.body.append(overlay);
+  textarea.focus();
+}
 
 /**
  * A labelled on/off switch backed by a checkbox.
@@ -223,6 +286,14 @@ export function mountSettings(container, ctx) {
   }
   renderStretches();
 
+  const importBtn = el(
+    'button',
+    { class: 'ctrl-btn' },
+    icon('download'),
+    el('span', { text: 'Import a routine' }),
+  );
+  importBtn.addEventListener('click', () => openImportModal(ctx.onImport));
+
   container.append(
     el(
       'section',
@@ -236,6 +307,8 @@ export function mountSettings(container, ctx) {
       el('div', { class: 'settings-list' }, rows),
       el('h2', { class: 'settings-subhead', text: 'Your stretches' }),
       stretchesList,
+      el('h2', { class: 'settings-subhead', text: 'Routines' }),
+      el('div', { class: 'editor-add-buttons' }, importBtn),
     ),
   );
 }

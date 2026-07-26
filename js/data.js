@@ -10,6 +10,7 @@ import { STRETCHES, ROUTINES as BUILTIN_ROUTINES } from './seed.js';
 
 /** @typedef {import('./types.js').Stretch} Stretch */
 /** @typedef {import('./types.js').Routine} Routine */
+/** @typedef {import('./types.js').StretchRef} StretchRef */
 
 /** @type {Record<string, Stretch>} Built-in stretches, never mutated. */
 const builtinStretchById = Object.fromEntries(STRETCHES.map((s) => [s.id, s]));
@@ -167,6 +168,143 @@ export function getAllRoutines() {
  */
 export function getRoutineById(id) {
   return getAllRoutines().find((r) => r.id === id) ?? null;
+}
+
+// --- Share / export ---
+
+/** Current share-payload format version. Bump on any breaking change to the shape. */
+const SHARE_VERSION = 1;
+
+/**
+ * @typedef {object} SharePayload
+ * @property {number} v Format version.
+ * @property {Routine} routine The routine (ids are regenerated on import).
+ * @property {Stretch[]} stretches Referenced custom stretches, so they travel with the routine.
+ */
+
+/** @param {unknown} v @returns {number} */
+function clampSeconds(v) {
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) ? Math.max(1, Math.min(3600, n)) : 30;
+}
+
+/** @param {Uint8Array} bytes @returns {string} URL-safe base64 (no padding). */
+function toBase64Url(bytes) {
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+/** @param {string} str @returns {Uint8Array} */
+function fromBase64Url(str) {
+  const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+/**
+ * Build a self-contained share payload for a routine: the routine plus any **custom** stretches it
+ * references (built-ins exist everywhere, so they are not embedded).
+ * @param {Routine} routine
+ * @returns {SharePayload}
+ */
+export function buildSharePayload(routine) {
+  /** @type {Set<string>} */
+  const ids = new Set();
+  for (const it of routine.items) {
+    if ('block' in it) for (const ref of it.block) ids.add(ref.stretchId);
+    else ids.add(it.stretchId);
+  }
+  const stretches = [...ids]
+    .filter((id) => id.startsWith('ustr-'))
+    .map((id) => stretchById[id])
+    .filter(/** @returns {s is Stretch} */ (s) => Boolean(s));
+  return { v: SHARE_VERSION, routine, stretches };
+}
+
+/**
+ * Encode a payload as a URL-safe base64 string (UTF-8 → bytes → base64url).
+ * @param {SharePayload} payload
+ * @returns {string}
+ */
+export function encodeShare(payload) {
+  return toBase64Url(new TextEncoder().encode(JSON.stringify(payload)));
+}
+
+/**
+ * Decode a share string back into a payload (throws on malformed input).
+ * @param {string} code
+ * @returns {SharePayload}
+ */
+export function decodeShare(code) {
+  return JSON.parse(new TextDecoder().decode(fromBase64Url(code)));
+}
+
+/**
+ * Import a share payload into the user's library: version-checked, with **all** ids regenerated
+ * (routine + custom stretches, refs remapped) so imports never collide with existing content.
+ * Unresolvable references are dropped; an empty result throws. Returns the new routine.
+ * @param {unknown} payload
+ * @returns {Routine}
+ */
+export function importSharePayload(payload) {
+  const p = /** @type {any} */ (payload);
+  if (!p || p.v !== SHARE_VERSION || !p.routine || !Array.isArray(p.routine.items)) {
+    throw new Error('Unrecognised or unsupported share data.');
+  }
+
+  // Regenerate custom-stretch ids and add them to the library.
+  /** @type {Map<string, string>} */
+  const idMap = new Map();
+  const incoming = Array.isArray(p.stretches) ? p.stretches : [];
+  for (const s of incoming) {
+    if (!s || typeof s.id !== 'string') continue;
+    const newId = makeStretchId();
+    idMap.set(s.id, newId);
+    upsertUserStretch({
+      id: newId,
+      name: String(s.name ?? 'Custom stretch'),
+      area: String(s.area ?? ''),
+      description: String(s.description ?? ''),
+      defaultSeconds: clampSeconds(s.defaultSeconds),
+      perSide: Boolean(s.perSide),
+    });
+  }
+
+  const remap = (/** @type {string} */ id) => idMap.get(id) ?? id;
+  const resolvable = (/** @type {string} */ id) => getStretch(id) !== null;
+  const mapRef = (/** @type {any} */ r) => ({
+    stretchId: remap(String(r.stretchId)),
+    seconds: clampSeconds(r.seconds),
+  });
+
+  /** @type {import('./types.js').RoutineItem[]} */
+  const items = [];
+  for (const it of p.routine.items) {
+    if (it && 'block' in it && Array.isArray(it.block)) {
+      const block = it.block
+        .map(mapRef)
+        .filter((/** @type {StretchRef} */ r) => resolvable(r.stretchId));
+      if (block.length) items.push({ block });
+    } else if (it && typeof it.stretchId === 'string') {
+      const ref = mapRef(it);
+      if (resolvable(ref.stretchId)) items.push(ref);
+    }
+  }
+  if (items.length === 0) throw new Error('This routine has no usable stretches to import.');
+
+  /** @type {Routine} */
+  const routine = {
+    id: makeUserId(),
+    name: String(p.routine.name ?? 'Imported routine'),
+    description: String(p.routine.description ?? ''),
+    builtIn: false,
+    items,
+  };
+  upsertUserRoutine(routine);
+  return routine;
 }
 
 /** @returns {Record<string, Stretch>} The stretch library keyed by id. */

@@ -11,7 +11,13 @@ import { getStretch, routineHoldSeconds } from '../data.js';
 
 /**
  * @param {HTMLElement} container
- * @param {{ routine: Routine, onStart: () => void, onBack: () => void, onEdit?: () => void }} ctx
+ * @param {{
+ *   routine: Routine,
+ *   onStart: () => void,
+ *   onBack: () => void,
+ *   onEdit?: () => void,
+ *   onShare?: () => void,
+ * }} ctx
  * @returns {void}
  */
 export function mountRoutineDetail(container, ctx) {
@@ -73,6 +79,11 @@ export function mountRoutineDetail(container, ctx) {
   startBtn.addEventListener('click', ctx.onStart);
 
   const headerChildren = [backBtn, el('h1', { class: 'detail-title', text: r.name })];
+  if (ctx.onShare) {
+    const shareBtn = el('button', { class: 'icon-btn', 'aria-label': 'Share' }, icon('share'));
+    shareBtn.addEventListener('click', ctx.onShare);
+    headerChildren.push(shareBtn);
+  }
   if (ctx.onEdit) {
     const editBtn = el(
       'button',

@@ -46,12 +46,17 @@ export function createRouter(routes, notFound) {
   }
 
   function resolve() {
-    const path = location.hash.replace(/^#/, '') || '/';
+    const raw = location.hash.replace(/^#/, '') || '/';
+    const qIndex = raw.indexOf('?');
+    const path = (qIndex >= 0 ? raw.slice(0, qIndex) : raw) || '/';
+    const query = new URLSearchParams(qIndex >= 0 ? raw.slice(qIndex + 1) : '');
     if (cleanup) cleanup();
     cleanup = null;
     for (const route of routes) {
       const params = match(route.pattern, path);
       if (params) {
+        // Query-string values (e.g. ?d=… on an import link) are exposed as params too.
+        for (const [k, v] of query) if (!(k in params)) params[k] = v;
         setCleanup(route.handler(params));
         return;
       }

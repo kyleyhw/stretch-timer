@@ -29,10 +29,15 @@ import {
   deleteUserStretch,
   stretchInUse,
   makeStretchId,
+  buildSharePayload,
+  encodeShare,
+  decodeShare,
+  importSharePayload,
 } from './data.js';
 import { store } from './store.js';
 import { getSettings, updateSettings, initSettings, DEFAULT_SETTINGS } from './settings.js';
 import { applyTheme } from './theme.js';
+import { shareModal } from './views/shareModal.js';
 import { cues, haptics, wakeLock } from './cues.js';
 import { el, clear } from './ui.js';
 
@@ -58,6 +63,7 @@ const router = createRouter(
     { pattern: '/settings', handler: () => showSettings() },
     { pattern: '/new', handler: () => showEditor(null) },
     { pattern: '/edit/:id', handler: (p) => showEditor(p.id) },
+    { pattern: '/import', handler: (p) => showImport(p.d) },
   ],
   () => renderNotFound(),
 );
@@ -82,6 +88,7 @@ function showDetail(id) {
       router.navigate(`/play/${id}`);
     },
     onEdit: () => router.navigate(`/edit/${id}`),
+    onShare: () => openShare(routine),
     onBack: () => router.navigate('/'),
   });
 }
@@ -114,6 +121,7 @@ function showSettings() {
     isStretchInUse: (id) => stretchInUse(id),
     onStretchSave: (stretch) => upsertUserStretch(stretch),
     onStretchDelete: (id) => deleteUserStretch(id),
+    onImport: (raw) => importFromText(raw),
   });
 }
 
@@ -170,6 +178,81 @@ function renderNotFound() {
   const back = el('button', { class: 'ctrl-btn', text: 'Home' });
   back.addEventListener('click', () => router.navigate('/'));
   root.append(el('section', { class: 'view' }, el('p', { text: 'Not found.' }), back));
+}
+
+/** @param {import('./types.js').Routine} routine @returns {void} */
+function openShare(routine) {
+  const payload = buildSharePayload(routine);
+  const base = location.href.split('#')[0];
+  const link = `${base}#/import?d=${encodeShare(payload)}`;
+  const json = JSON.stringify(payload, null, 2);
+  const slug = routine.name
+    .replace(/[^a-z0-9]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase();
+  shareModal({ link, json, filename: `${slug || 'routine'}.json` });
+}
+
+/** @param {string | undefined} code @returns {void} */
+function showImport(code) {
+  if (!code) return renderImportError();
+  try {
+    const routine = importSharePayload(decodeShare(code));
+    showToast('Routine imported');
+    router.navigate(`/routine/${routine.id}`);
+  } catch {
+    renderImportError();
+  }
+}
+
+function renderImportError() {
+  clear(root);
+  const back = el('button', { class: 'ctrl-btn primary', text: 'Home' });
+  back.addEventListener('click', () => router.navigate('/'));
+  root.append(
+    el(
+      'section',
+      { class: 'view' },
+      el('h1', { class: 'detail-title', text: 'Import failed' }),
+      el('p', {
+        class: 'settings-note',
+        text: "That share link couldn't be read — it may be incomplete or from a newer version.",
+      }),
+      back,
+    ),
+  );
+}
+
+/**
+ * Import from pasted text: a full import link, a bare share code, or raw JSON. Returns an error
+ * message to display, or null on success (after navigating to the new routine).
+ * @param {string} raw
+ * @returns {string | null}
+ */
+function importFromText(raw) {
+  const text = raw.trim();
+  if (!text) return 'Paste a link or JSON, or choose a file.';
+  try {
+    const linkMatch = text.match(/[?&]d=([A-Za-z0-9\-_]+)/);
+    const payload = linkMatch
+      ? decodeShare(linkMatch[1])
+      : text.startsWith('{')
+        ? JSON.parse(text)
+        : decodeShare(text);
+    const routine = importSharePayload(payload);
+    showToast('Routine imported');
+    router.navigate(`/routine/${routine.id}`);
+    return null;
+  } catch {
+    return "Couldn't read that — check the link, JSON, or file.";
+  }
+}
+
+/** @param {string} message @returns {void} */
+function showToast(message) {
+  const toast = el('div', { class: 'toast', role: 'status', text: message });
+  document.body.append(toast);
+  setTimeout(() => toast.remove(), 2600);
 }
 
 router.start();
