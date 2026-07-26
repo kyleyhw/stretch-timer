@@ -30,8 +30,28 @@ export function el(tag, props = {}, ...children) {
   return node;
 }
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
 /**
- * @param {HTMLElement} node
+ * Create a namespaced SVG element. All props are set as attributes (`class` included); children may
+ * be nodes, strings, or arrays. Kept separate from `el` because SVG requires createElementNS.
+ * @param {string} tag
+ * @param {Record<string, unknown>} [props]
+ * @param {...(Child | Child[])} children
+ * @returns {SVGElement}
+ */
+export function svg(tag, props = {}, ...children) {
+  const node = document.createElementNS(SVG_NS, tag);
+  for (const [key, value] of Object.entries(props)) {
+    if (value === null || value === undefined) continue;
+    node.setAttribute(key, String(value));
+  }
+  appendChildren(node, children);
+  return node;
+}
+
+/**
+ * @param {Element} node
  * @param {Array<Child | Child[]>} children
  * @returns {void}
  */

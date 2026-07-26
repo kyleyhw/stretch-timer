@@ -6,10 +6,13 @@
  * of SessionSettings, so this object can be passed directly to expandRoutine.
  */
 
+/** @typedef {'dark' | 'light' | 'system'} ThemePref */
+
 /**
  * @typedef {object} AppSettings
  * @property {number} prepSeconds Get-ready countdown before each stretch (0–15).
  * @property {number} switchSeconds Countdown between sides of a per-side stretch (0–10).
+ * @property {ThemePref} theme Colour theme: fixed dark/light or follow the OS ('system').
  * @property {boolean} sound End-of-step beep and count-in ticks.
  * @property {boolean} countIn Tick each of the final three seconds of a hold.
  * @property {boolean} vibration Haptic buzz at transitions (where supported).
@@ -20,7 +23,8 @@
 export const DEFAULT_SETTINGS = {
   prepSeconds: 5,
   switchSeconds: 3,
-  sound: true,
+  theme: 'dark',
+  sound: false,
   countIn: true,
   vibration: true,
   keepAwake: true,

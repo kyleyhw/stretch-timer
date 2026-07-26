@@ -6,6 +6,7 @@
 import { el, clear } from '../ui.js';
 
 /** @typedef {import('../settings.js').AppSettings} AppSettings */
+/** @typedef {import('../settings.js').ThemePref} ThemePref */
 
 /**
  * @typedef {object} SettingsContext
@@ -34,6 +35,35 @@ function toggleRow(label, value, disabled, onToggle) {
     { class: `setting-row${disabled ? ' setting-row--disabled' : ''}` },
     el('span', { class: 'setting-label', text: label }),
     el('span', { class: 'toggle' }, checkbox, el('span', { class: 'toggle-track' })),
+  );
+}
+
+/**
+ * A labelled segmented control (single-select). Options render as pills; the active one is tinted.
+ * @param {string} label
+ * @param {ReadonlyArray<{ value: string, label: string }>} options
+ * @param {string} value
+ * @param {(v: string) => void} onSelect
+ * @returns {HTMLElement}
+ */
+function segmentedRow(label, options, value, onSelect) {
+  const buttons = options.map((opt) => {
+    const b = el('button', {
+      class: `segmented-option${opt.value === value ? ' is-active' : ''}`,
+      text: opt.label,
+    });
+    b.addEventListener('click', () => {
+      for (const other of buttons) other.classList.remove('is-active');
+      b.classList.add('is-active');
+      onSelect(opt.value);
+    });
+    return b;
+  });
+  return el(
+    'div',
+    { class: 'setting-row setting-full' },
+    el('span', { class: 'setting-label', text: label }),
+    el('div', { class: 'segmented' }, buttons),
   );
 }
 
@@ -98,6 +128,16 @@ export function mountSettings(container, ctx) {
   );
 
   const rows = [
+    segmentedRow(
+      'Theme',
+      [
+        { value: 'dark', label: 'Dark' },
+        { value: 'light', label: 'Light' },
+        { value: 'system', label: 'System' },
+      ],
+      s.theme,
+      (v) => ctx.onChange({ theme: /** @type {ThemePref} */ (v) }),
+    ),
     stepperRow('Get-ready time', s.prepSeconds, 0, 15, (v) => ctx.onChange({ prepSeconds: v })),
     stepperRow('Switch-sides time', s.switchSeconds, 0, 10, (v) =>
       ctx.onChange({ switchSeconds: v }),

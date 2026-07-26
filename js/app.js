@@ -25,6 +25,7 @@ import {
 } from './data.js';
 import { store } from './store.js';
 import { getSettings, updateSettings, initSettings, DEFAULT_SETTINGS } from './settings.js';
+import { applyTheme } from './theme.js';
 import { cues, haptics, wakeLock } from './cues.js';
 import { el, clear } from './ui.js';
 
@@ -32,6 +33,7 @@ import { el, clear } from './ui.js';
 setUserRoutines(store.loadUserRoutines());
 setPersist((list) => store.saveUserRoutines(list));
 initSettings(store.loadSettings(DEFAULT_SETTINGS), (s) => store.saveSettings(s));
+applyTheme(getSettings().theme);
 
 const app = document.getElementById('app');
 if (!(app instanceof HTMLElement)) {
@@ -85,6 +87,7 @@ function startPlayer(id) {
     routine,
     steps,
     settings,
+    onSettingsChange: (patch) => updateSettings(patch),
     onExit: () => router.navigate(`/routine/${id}`),
   });
 }
@@ -92,7 +95,10 @@ function startPlayer(id) {
 function showSettings() {
   mountSettings(root, {
     settings: getSettings(),
-    onChange: (patch) => updateSettings(patch),
+    onChange: (patch) => {
+      updateSettings(patch);
+      if (patch.theme) applyTheme(patch.theme);
+    },
     onBack: () => router.navigate('/'),
     caps: { vibration: haptics.supported, wakeLock: wakeLock.supported },
   });
