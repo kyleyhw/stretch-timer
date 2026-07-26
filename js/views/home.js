@@ -2,7 +2,7 @@
  * @file Home view: the list of all routines (built-in + user). Tapping a routine opens its detail.
  */
 
-import { el, clear } from '../ui.js';
+import { el, clear, icon } from '../ui.js';
 import { routineHoldSeconds } from '../data.js';
 
 /** @typedef {import('../types.js').Routine} Routine */
@@ -37,7 +37,7 @@ export function mountHome(container, ctx) {
             text: `~${mins} min · ${r.items.length} stretches${r.builtIn ? '' : ' · custom'}`,
           }),
         ),
-        el('span', { class: 'chevron', 'aria-hidden': 'true', text: '›' }),
+        el('span', { class: 'chevron', 'aria-hidden': 'true' }, icon('forward')),
       );
       const open = () => ctx.onOpen(r.id);
       item.addEventListener('click', open);
@@ -53,7 +53,7 @@ export function mountHome(container, ctx) {
 
   const titleRow = el('div', { class: 'home-title-row' }, el('h1', { text: 'Stretch Timer' }));
   if (ctx.onSettings) {
-    const gear = el('button', { class: 'icon-btn', 'aria-label': 'Settings', text: '⚙' });
+    const gear = el('button', { class: 'icon-btn', 'aria-label': 'Settings' }, icon('settings'));
     gear.addEventListener('click', ctx.onSettings);
     titleRow.append(gear);
   }
@@ -68,7 +68,12 @@ export function mountHome(container, ctx) {
   const section = el('section', { class: 'view view-home' }, header, list);
 
   if (ctx.onNew) {
-    const newBtn = el('button', { class: 'ctrl-btn new-routine-btn', text: '+ New routine' });
+    const newBtn = el(
+      'button',
+      { class: 'ctrl-btn new-routine-btn' },
+      icon('plus'),
+      el('span', { text: 'New routine' }),
+    );
     newBtn.addEventListener('click', ctx.onNew);
     section.append(newBtn);
   }

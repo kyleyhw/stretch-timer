@@ -155,10 +155,25 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Inline line icons inherit button colour and scale with the button's font-size. */
+.icon {
+  width: 1.25em;
+  height: 1.25em;
+  display: block;
+  flex-shrink: 0;
+}
+
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .ctrl-btn {
   min-height: var(--tap);
   min-width: var(--tap);
   padding: 0 20px;
+  gap: 8px;
   border-radius: var(--r-pill);
   background: var(--surface-2);
   color: var(--text);
@@ -333,10 +348,15 @@ button {
 }
 
 .chevron {
-  color: var(--accent);
-  font-size: 1.5rem;
+  color: var(--muted);
+  display: flex;
   flex-shrink: 0;
   transition: transform var(--dur-2) var(--spring);
+}
+
+.chevron .icon {
+  width: 1.4rem;
+  height: 1.4rem;
 }
 
 .routine-item--tappable:hover .chevron {
@@ -607,6 +627,15 @@ button {
   letter-spacing: -0.03em;
 }
 
+.view-player[data-waiting='true'] .countdown {
+  color: var(--accent);
+}
+
+.play-glyph {
+  width: 2.6rem;
+  height: 2.6rem;
+}
+
 .countdown.is-tick {
   animation: numtick var(--dur-2) var(--ease);
 }
@@ -683,6 +712,13 @@ button {
 
 .controls .ctrl-btn {
   font-size: 1.3rem;
+}
+
+.controls .ctrl-btn:not(.primary) {
+  width: var(--tap);
+  min-width: var(--tap);
+  padding: 0;
+  border-radius: var(--r-pill);
 }
 
 .controls .primary {

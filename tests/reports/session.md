@@ -3,8 +3,8 @@
 - **Module under test:** [`js/session.js`](../../js/session.js) — `expandRoutine` and `Session`.
 - **Suite:** [`tests/session.test.js`](../session.test.js), run with `node --test`.
 - **Date:** 2026-07-26
-- **Result:** 15 / 15 passed, 0 failed. (Full repository suite: 29 / 29.)
-- **Runtime:** 101 ms for the whole `node --test tests/session.test.js` process, 15 subtests;
+- **Result:** 20 / 20 passed, 0 failed. (Full repository suite: 34 / 34.)
+- **Runtime:** 104 ms for the whole `node --test tests/session.test.js` process, 20 subtests;
   every subtest is < 1 ms because the session is driven by a virtual clock — no real time passes
   even for the simulated 83-second routine or the 100-second "hidden tab" gap.
 - **Static analysis:** `npm run typecheck` passes with no diagnostics.
@@ -50,6 +50,20 @@ Three cases cover the side-block construct (a group performed all-on-one-side, t
 | 13  | Block runs all stretches one side, then the other | Grouped-by-side expansion, sides, durations, monotonic per-hold index | Block `[X 30 s, Y 20 s]`, 5 s prep / 3 s switch → prep, X_L, Y_L, switch, X_R, Y_R |
 | 14  | Block honours prep/switch = 0                     | Zero-duration phases omitted inside blocks too                        | Same block, prep/switch 0 → four holds only                                        |
 | 15  | Session plays block all-left then all-right       | End-to-end order and progress count                                   | 1 s holds; assert `X:left, Y:left, X:right, Y:right` and stretch count 4           |
+
+### Pause-between-stretches tests (16–20)
+
+Five cases cover `Step.itemIndex` and the optional "wait at each routine item" mode (`autoAdvance`
+off). The boundary that pauses is a **new routine item**, so a per-side stretch's own prep/hold/sides
+and a block's inner holds flow without interruption; only the jump from one item to the next waits.
+
+| #   | Test                                                   | Why (property verified)                                   | Inputs / rationale                                                                        |
+| --- | ------------------------------------------------------ | --------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 16  | `itemIndex` groups a block; plain items each increment | The pause boundary is per-item, not per-hold              | `a`, block`[x,y]`, `a` → itemIndex `0,0,1,1,1,1,1,1,2,2` vs stretchIndex diverging        |
+| 17  | Auto-advance off waits at each item until `proceed()`  | Gate fires on item crossing; clock frozen at the boundary | Play item 0, assert `onWaiting` at 35 s, clock frozen through +50 s, `proceed()` finishes |
+| 18  | No wait within one item (per-side / block)             | Left→right inside an item never interrupts                | Single per-side stretch, switch 1 s → plays `hold-L, switch, hold-R`, zero waits          |
+| 19  | Auto-advance on (default) plays straight through       | Default behaviour unchanged; `onWaiting` never fires      | Full run, assert 0 waits, 1 completion                                                    |
+| 20  | `next()` plays through the gate (explicit navigation)  | A deliberate skip should not drop into the wait state     | Skip from A into B → lands on prep(B) playing, `waiting` false                            |
 
 ## Failures
 

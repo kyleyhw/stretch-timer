@@ -34,8 +34,16 @@ import { Countdown } from './timer.js';
  * @property {(stepRemainingMs: number, step: Step, info: SessionInfo) => void} [onTick]
  *   Fires every frame with the remaining time in the current step.
  * @property {(paused: boolean) => void} [onPauseChange]
+ * @property {(nextStep: Step, info: SessionInfo) => void} [onWaiting] Fires when auto-advance is off
+ *   and the session pauses at the start of a new routine item, awaiting {@link Session#proceed}.
  * @property {() => void} [onComplete] Fires once when the whole session finishes.
  * @property {() => void} [onQuit] Fires when the session is abandoned via quit().
+ */
+
+/**
+ * @typedef {object} SessionOptions
+ * @property {boolean} [autoAdvance] When false, the session waits (fires onWaiting) at each new
+ *   routine item until {@link Session#proceed} is called. Default true.
  */
 
 /**
@@ -67,6 +75,7 @@ export function expandRoutine(routine, stretchById, settings) {
   /** @type {Step[]} */
   const steps = [];
   let unit = 0;
+  let itemIndex = 0;
 
   /** @param {string} id @returns {Stretch} */
   const resolve = (id) => {
@@ -84,6 +93,7 @@ export function expandRoutine(routine, stretchById, settings) {
         subs.forEach(({ ref, stretch }, k) => {
           const base = {
             stretchIndex: unit,
+            itemIndex,
             stretchName: stretch.name,
             stretchDescription: stretch.description,
           };
@@ -114,11 +124,13 @@ export function expandRoutine(routine, stretchById, settings) {
           unit++;
         });
       });
+      itemIndex++;
     } else {
       const stretch = resolve(item.stretchId);
       const holdMs = Math.max(0, item.seconds) * 1000;
       const base = {
         stretchIndex: unit,
+        itemIndex,
         stretchName: stretch.name,
         stretchDescription: stretch.description,
       };
@@ -159,6 +171,7 @@ export function expandRoutine(routine, stretchById, settings) {
         steps.push({ ...base, type: 'hold', durationMs: holdMs, side: null, label: 'Hold' });
       }
       unit++;
+      itemIndex++;
     }
   }
 
@@ -174,8 +187,9 @@ export class Session {
    * @param {Step[]} steps A non-empty expanded step list (see {@link expandRoutine}).
    * @param {SessionCallbacks} [callbacks]
    * @param {CountdownDeps} [deps]
+   * @param {SessionOptions} [options]
    */
-  constructor(steps, callbacks = {}, deps = {}) {
+  constructor(steps, callbacks = {}, deps = {}, options = {}) {
     if (steps.length === 0) {
       throw new RangeError('Session requires at least one step');
     }
@@ -183,6 +197,8 @@ export class Session {
     this.steps = steps;
     /** @type {SessionCallbacks} */
     this._cb = callbacks;
+    /** @type {boolean} When false, wait for proceed() at each new routine item. */
+    this._autoAdvance = options.autoAdvance !== false;
 
     /** @type {number[]} Cumulative boundaries; _bounds[j] is elapsed time at the start of step j. */
     this._bounds = [0];
@@ -196,10 +212,14 @@ export class Session {
 
     /** @type {number} Index of the step reported on the previous tick (-1 before start). */
     this._lastStep = -1;
+    /** @type {number} itemIndex of the last played step (-1 before start); drives the wait gate. */
+    this._lastItem = -1;
     /** @type {number} Current step index. */
     this._curStep = 0;
     /** @type {boolean} */
     this._paused = false;
+    /** @type {boolean} True while holding at an item boundary awaiting proceed(). */
+    this._waiting = false;
 
     this._cd = new Countdown(
       this._total,
@@ -211,6 +231,11 @@ export class Session {
   /** @returns {boolean} */
   get paused() {
     return this._paused;
+  }
+
+  /** @returns {boolean} True while awaiting proceed() at an item boundary. */
+  get waiting() {
+    return this._waiting;
   }
 
   /** @returns {boolean} */
@@ -239,8 +264,10 @@ export class Session {
    */
   start() {
     this._lastStep = -1;
+    this._lastItem = -1;
     this._curStep = 0;
     this._paused = false;
+    this._waiting = false;
     this._cd.start();
   }
 
@@ -273,14 +300,39 @@ export class Session {
   }
 
   /**
-   * Frame handler: derive the current step from elapsed time, emit step changes, then emit the
-   * per-step remaining.
+   * Frame handler: derive the current step from elapsed time. When auto-advance is off, a natural
+   * tick that crosses into a new routine item is intercepted — the session snaps back to the item
+   * boundary and waits (see {@link Session#_enterWaiting}) instead of playing on. Explicit
+   * navigation (skip/proceed) pre-sets `_lastItem`, so it plays through the gate.
    * @param {number} sessionRemaining Remaining ms in the whole session.
    * @returns {void}
    */
   _onTick(sessionRemaining) {
     const elapsed = this._total - sessionRemaining;
     const j = this._stepIndexAt(elapsed);
+    const step = this.steps[j];
+
+    if (
+      !this._autoAdvance &&
+      !this._waiting &&
+      this._lastItem !== -1 &&
+      step.itemIndex !== this._lastItem
+    ) {
+      this._enterWaiting(j);
+      return;
+    }
+
+    this._render(j, elapsed);
+  }
+
+  /**
+   * Emit the step change (if any) and the per-step remaining for step `j`. Keeps `_lastItem` current
+   * so the auto-advance gate only fires on the next genuine item crossing.
+   * @param {number} j
+   * @param {number} elapsed
+   * @returns {void}
+   */
+  _render(j, elapsed) {
     this._curStep = j;
     const step = this.steps[j];
 
@@ -289,9 +341,37 @@ export class Session {
       this._lastStep = j;
       if (this._cb.onStepChange) this._cb.onStepChange(step, this._info(step), prev);
     }
+    this._lastItem = step.itemIndex;
 
     const stepRemaining = Math.max(0, this._bounds[j + 1] - elapsed);
     if (this._cb.onTick) this._cb.onTick(stepRemaining, step, this._info(step));
+  }
+
+  /**
+   * Freeze the clock exactly at the start of step `j` and announce the upcoming item via onWaiting.
+   * Resumed by {@link Session#proceed}.
+   * @param {number} j First step of the new routine item.
+   * @returns {void}
+   */
+  _enterWaiting(j) {
+    this._cd.pause();
+    this._cd.setRemaining(this._total - this._bounds[j]);
+    this._waiting = true;
+    this._curStep = j;
+    const step = this.steps[j];
+    if (this._cb.onWaiting) this._cb.onWaiting(step, this._info(step));
+  }
+
+  /**
+   * Resume from a waiting state (auto-advance off): play the pending item. No-op otherwise. Named
+   * `proceed` rather than `continue` because the latter is a reserved word under `tsc --checkJs`.
+   * @returns {void}
+   */
+  proceed() {
+    if (!this._waiting) return;
+    this._waiting = false;
+    this._lastItem = this.steps[this._curStep].itemIndex; // mark entered so the gate lets it play
+    this._cd.resume(); // immediate tick emits onStepChange + onTick for the new item
   }
 
   /** @returns {void} */
@@ -306,13 +386,13 @@ export class Session {
    * @returns {void}
    */
   reconcile() {
-    if (this._paused || this._cd.completed) return;
+    if (this._paused || this._waiting || this._cd.completed) return;
     this._onTick(this._cd.remainingMs());
   }
 
   /** @returns {void} */
   pause() {
-    if (this._paused || this._cd.completed) return;
+    if (this._paused || this._waiting || this._cd.completed) return;
     this._cd.pause();
     this._paused = true;
     if (this._cb.onPauseChange) this._cb.onPauseChange(true);
@@ -348,6 +428,8 @@ export class Session {
    */
   _seekToStep(j) {
     this._paused = false;
+    this._waiting = false;
+    this._lastItem = this.steps[j].itemIndex; // explicit navigation plays through the wait gate
     this._cd.setRemaining(this._total - this._bounds[j]);
     if (!this._cd.running) this._cd.resume();
     this._onTick(this._cd.remainingMs());

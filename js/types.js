@@ -54,7 +54,10 @@
  * @typedef {object} Step
  * @property {'prep' | 'hold' | 'switch'} type Phase kind.
  * @property {number} durationMs Step length in milliseconds.
- * @property {number} stretchIndex Index of the owning routine item (for "stretch N of M").
+ * @property {number} stretchIndex Running hold-unit index (for "stretch N of M"); a block's inner
+ *   holds each get their own value.
+ * @property {number} itemIndex Index of the routine item that produced this step; a block's inner
+ *   holds and a stretch's own prep/hold/sides all share one. The "pause between stretches" boundary.
  * @property {'left' | 'right' | null} side Active side, or null when not per-side.
  * @property {string} stretchName Resolved stretch name (for display).
  * @property {string} stretchDescription Resolved stretch description (for display).

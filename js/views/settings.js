@@ -3,7 +3,7 @@
  * via the onChange sink.
  */
 
-import { el, clear } from '../ui.js';
+import { el, clear, icon } from '../ui.js';
 
 /** @typedef {import('../settings.js').AppSettings} AppSettings */
 /** @typedef {import('../settings.js').ThemePref} ThemePref */
@@ -85,12 +85,16 @@ function stepperRow(label, value, min, max, onSet) {
     valueEl.textContent = `${v}s`;
     onSet(v);
   };
-  const minus = el('button', {
-    class: 'stepper-btn',
-    'aria-label': `Decrease ${label}`,
-    text: '−',
-  });
-  const plus = el('button', { class: 'stepper-btn', 'aria-label': `Increase ${label}`, text: '+' });
+  const minus = el(
+    'button',
+    { class: 'stepper-btn', 'aria-label': `Decrease ${label}` },
+    icon('minus'),
+  );
+  const plus = el(
+    'button',
+    { class: 'stepper-btn', 'aria-label': `Increase ${label}` },
+    icon('plus'),
+  );
   minus.addEventListener('click', () => apply(v - 1));
   plus.addEventListener('click', () => apply(v + 1));
   return el(
@@ -110,7 +114,7 @@ export function mountSettings(container, ctx) {
   clear(container);
   const s = ctx.settings;
 
-  const backBtn = el('button', { class: 'icon-btn', 'aria-label': 'Back', text: '‹' });
+  const backBtn = el('button', { class: 'icon-btn', 'aria-label': 'Back' }, icon('back'));
   backBtn.addEventListener('click', ctx.onBack);
 
   // Count-in depends on Sound: build its input up-front so the Sound toggle can disable it live.
@@ -141,6 +145,9 @@ export function mountSettings(container, ctx) {
     stepperRow('Get-ready time', s.prepSeconds, 0, 15, (v) => ctx.onChange({ prepSeconds: v })),
     stepperRow('Switch-sides time', s.switchSeconds, 0, 10, (v) =>
       ctx.onChange({ switchSeconds: v }),
+    ),
+    toggleRow('Pause between stretches', !s.autoAdvance, false, (on) =>
+      ctx.onChange({ autoAdvance: !on }),
     ),
     toggleRow('Sound', s.sound, false, (on) => {
       ctx.onChange({ sound: on });

@@ -4,7 +4,7 @@
  * a fresh user-owned copy (the caller passes a copy with a new id).
  */
 
-import { el, clear } from '../ui.js';
+import { el, clear, icon } from '../ui.js';
 
 /** @typedef {import('../types.js').Routine} Routine */
 /** @typedef {import('../types.js').RoutineItem} RoutineItem */
@@ -128,12 +128,12 @@ export function mountEditor(container, ctx) {
     });
 
     const up = /** @type {HTMLButtonElement} */ (
-      el('button', { class: 'mini-btn', 'aria-label': 'Move up', text: '↑' })
+      el('button', { class: 'mini-btn', 'aria-label': 'Move up' }, icon('up'))
     );
     const down = /** @type {HTMLButtonElement} */ (
-      el('button', { class: 'mini-btn', 'aria-label': 'Move down', text: '↓' })
+      el('button', { class: 'mini-btn', 'aria-label': 'Move down' }, icon('down'))
     );
-    const del = el('button', { class: 'mini-btn', 'aria-label': 'Remove', text: '✕' });
+    const del = el('button', { class: 'mini-btn', 'aria-label': 'Remove' }, icon('close'));
     up.disabled = !ops.canUp;
     down.disabled = !ops.canDown;
     up.addEventListener('click', ops.onUp);
@@ -163,12 +163,12 @@ export function mountEditor(container, ctx) {
    */
   function blockCard(blockItem, index) {
     const up = /** @type {HTMLButtonElement} */ (
-      el('button', { class: 'mini-btn', 'aria-label': 'Move block up', text: '↑' })
+      el('button', { class: 'mini-btn', 'aria-label': 'Move block up' }, icon('up'))
     );
     const down = /** @type {HTMLButtonElement} */ (
-      el('button', { class: 'mini-btn', 'aria-label': 'Move block down', text: '↓' })
+      el('button', { class: 'mini-btn', 'aria-label': 'Move block down' }, icon('down'))
     );
-    const del = el('button', { class: 'mini-btn', 'aria-label': 'Remove block', text: '✕' });
+    const del = el('button', { class: 'mini-btn', 'aria-label': 'Remove block' }, icon('close'));
     up.disabled = index === 0;
     down.disabled = index === draft.items.length - 1;
     up.addEventListener('click', () => {
@@ -286,7 +286,12 @@ export function mountEditor(container, ctx) {
       renderItems();
     }
   });
-  const addBlockBtn = el('button', { class: 'ctrl-btn', text: '+ Per-side block' });
+  const addBlockBtn = el(
+    'button',
+    { class: 'ctrl-btn' },
+    icon('plus'),
+    el('span', { text: 'Per-side block' }),
+  );
   addBlockBtn.addEventListener('click', () => {
     draft.items.push({ block: [] });
     renderItems();
@@ -311,7 +316,7 @@ export function mountEditor(container, ctx) {
     ctx.onSave({ ...draft });
   });
 
-  const cancelBtn = el('button', { class: 'icon-btn', 'aria-label': 'Cancel', text: '‹' });
+  const cancelBtn = el('button', { class: 'icon-btn', 'aria-label': 'Cancel' }, icon('back'));
   cancelBtn.addEventListener('click', ctx.onCancel);
 
   const actions = el('div', { class: 'detail-actions editor-actions' }, saveBtn);

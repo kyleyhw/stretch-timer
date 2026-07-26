@@ -10,7 +10,7 @@
  * the ring and number; a header button mutes/unmutes live.
  */
 
-import { el, svg, clear, fmtClock, confirmModal } from '../ui.js';
+import { el, svg, icon, clear, fmtClock, confirmModal } from '../ui.js';
 import { Session } from '../session.js';
 import { cues, haptics, wakeLock } from '../cues.js';
 
@@ -44,7 +44,7 @@ export function mountPlayer(container, ctx) {
 
   const routineName = el('span', { class: 'routine-name', text: ctx.routine.name });
   const muteBtn = el('button', { class: 'icon-btn', 'aria-label': 'Toggle sound' });
-  const quitBtn = el('button', { class: 'icon-btn', 'aria-label': 'Quit', text: '✕' });
+  const quitBtn = el('button', { class: 'icon-btn', 'aria-label': 'Quit' }, icon('close'));
 
   const stretchName = el('h1', { class: 'stretch-name', 'aria-live': 'polite' });
   const stretchDesc = el('p', { class: 'stretch-desc' });
@@ -78,9 +78,13 @@ export function mountPlayer(container, ctx) {
     ringCenter,
   );
 
-  const prevBtn = el('button', { class: 'ctrl-btn', 'aria-label': 'Previous stretch', text: '⏮' });
+  const prevBtn = el(
+    'button',
+    { class: 'ctrl-btn', 'aria-label': 'Previous stretch' },
+    icon('prev'),
+  );
   const toggleBtn = el('button', { class: 'ctrl-btn primary', text: 'Pause' });
-  const nextBtn = el('button', { class: 'ctrl-btn', 'aria-label': 'Skip stretch', text: '⏭' });
+  const nextBtn = el('button', { class: 'ctrl-btn', 'aria-label': 'Skip stretch' }, icon('next'));
   const controls = el('div', { class: 'controls' }, prevBtn, toggleBtn, nextBtn);
 
   const view = el(
@@ -123,67 +127,104 @@ export function mountPlayer(container, ctx) {
   }
 
   function renderMute() {
-    muteBtn.textContent = settings.sound ? '🔊' : '🔇';
-    muteBtn.setAttribute('aria-pressed', String(settings.sound));
-    muteBtn.classList.toggle('is-active', settings.sound);
+    const on = settings.sound;
+    clear(muteBtn);
+    muteBtn.append(icon(on ? 'soundOn' : 'soundOff'));
+    muteBtn.setAttribute('aria-pressed', String(on));
+    muteBtn.setAttribute('aria-label', on ? 'Mute sound' : 'Unmute sound');
+    muteBtn.classList.toggle('is-active', on);
   }
   renderMute();
 
-  const session = new Session(ctx.steps, {
-    onStepChange: (step, info, prev) => {
-      view.dataset.phase = step.type;
-      phaseLabel.textContent = step.label;
-      stretchName.textContent = step.stretchName;
-      stretchDesc.textContent = step.type === 'hold' ? step.stretchDescription : '';
-      progressCount.textContent = `Stretch ${info.stretchNumber} of ${info.stretchCount}`;
-      shownSecs = -1; // force the countdown text to refresh on the next tick
-      ringWrap.classList.remove('is-countin');
-      if (prev) {
-        flashPhase(step.type);
-        haptics.buzz(prev.type === 'hold' ? 60 : 25);
-      }
-    },
-    onTick: (remMs, step, info) => {
-      // Ring depletion: full at the start of a step, empty at its end. Updated every frame for
-      // smooth motion; because there is no CSS transition on the offset, skips/seeks jump instantly.
-      const frac = step.durationMs > 0 ? Math.max(0, Math.min(1, remMs / step.durationMs)) : 0;
-      ringArc.setAttribute('stroke-dashoffset', String(RING_C * (1 - frac)));
+  const session = new Session(
+    ctx.steps,
+    {
+      onStepChange: (step, info, prev) => {
+        view.dataset.phase = step.type;
+        phaseLabel.textContent = step.label;
+        stretchName.textContent = step.stretchName;
+        stretchDesc.textContent = step.type === 'hold' ? step.stretchDescription : '';
+        progressCount.textContent = `Stretch ${info.stretchNumber} of ${info.stretchCount}`;
+        shownSecs = -1; // force the countdown text to refresh on the next tick
+        ringWrap.classList.remove('is-countin');
+        if (prev) {
+          flashPhase(step.type);
+          haptics.buzz(prev.type === 'hold' ? 60 : 25);
+        }
+      },
+      onTick: (remMs, step, info) => {
+        // Ring depletion: full at the start of a step, empty at its end. Updated every frame for
+        // smooth motion; because there is no CSS transition on the offset, skips/seeks jump instantly.
+        const frac = step.durationMs > 0 ? Math.max(0, Math.min(1, remMs / step.durationMs)) : 0;
+        ringArc.setAttribute('stroke-dashoffset', String(RING_C * (1 - frac)));
 
-      const secs = Math.ceil(remMs / 1000);
-      if (secs !== shownSecs) {
-        shownSecs = secs;
-        countdown.textContent = fmtClock(secs);
-        const counting = step.type === 'hold' && secs >= 1 && secs <= 3;
-        ringWrap.classList.toggle('is-countin', counting);
-        if (!counting) tickNumber();
-      }
+        const secs = Math.ceil(remMs / 1000);
+        if (secs !== shownSecs) {
+          shownSecs = secs;
+          countdown.textContent = fmtClock(secs);
+          const counting = step.type === 'hold' && secs >= 1 && secs <= 3;
+          ringWrap.classList.toggle('is-countin', counting);
+          if (!counting) tickNumber();
+        }
 
-      if (info.stepIndex !== cueStep) {
-        cueStep = info.stepIndex;
-        cues.scheduleStep(remMs / 1000, {
-          endBeep: settings.sound,
-          countIn: settings.sound && settings.countIn && step.type === 'hold' ? 3 : 0,
+        if (info.stepIndex !== cueStep) {
+          cueStep = info.stepIndex;
+          cues.scheduleStep(remMs / 1000, {
+            endBeep: settings.sound,
+            countIn: settings.sound && settings.countIn && step.type === 'hold' ? 3 : 0,
+          });
+        }
+      },
+      onPauseChange: (paused) => {
+        toggleBtn.textContent = paused ? 'Resume' : 'Pause';
+        view.dataset.paused = String(paused);
+        if (paused) cues.cancel();
+        else cueStep = -1; // force a reschedule on the next tick
+      },
+      onWaiting: (step, info) => {
+        // Auto-advance is off: hold on a "next up" screen until the user taps Continue.
+        cues.cancel();
+        view.dataset.phase = step.type;
+        view.dataset.waiting = 'true';
+        ringWrap.classList.remove('is-countin');
+        ringArc.setAttribute('stroke-dashoffset', '0');
+        phaseLabel.textContent = 'Next up';
+        stretchName.textContent = step.stretchName;
+        stretchDesc.textContent = step.stretchDescription;
+        progressCount.textContent = `Stretch ${info.stretchNumber} of ${info.stretchCount}`;
+        clear(countdown);
+        countdown.append(icon('play', 'play-glyph'));
+        shownSecs = -1;
+        cueStep = -1;
+        clear(controls);
+        const cont = el('button', { class: 'ctrl-btn primary', text: 'Continue' });
+        cont.addEventListener('click', () => {
+          view.dataset.waiting = 'false';
+          resetControls();
+          session.proceed();
         });
-      }
+        controls.append(cont);
+      },
+      onComplete: () => {
+        showComplete();
+        cues.beepNow();
+        haptics.buzz([60, 40, 60]);
+        void wakeLock.release();
+      },
+      onQuit: () => {
+        cues.cancel();
+        void wakeLock.release();
+        ctx.onExit();
+      },
     },
-    onPauseChange: (paused) => {
-      toggleBtn.textContent = paused ? 'Resume' : 'Pause';
-      view.dataset.paused = String(paused);
-      if (paused) cues.cancel();
-      else cueStep = -1; // force a reschedule on the next tick
-    },
-    onComplete: () => {
-      showComplete();
-      cues.beepNow();
-      haptics.buzz([60, 40, 60]);
-      void wakeLock.release();
-    },
-    onQuit: () => {
-      cues.cancel();
-      void wakeLock.release();
-      ctx.onExit();
-    },
-  });
+    {},
+    { autoAdvance: settings.autoAdvance },
+  );
+
+  function resetControls() {
+    clear(controls);
+    controls.append(prevBtn, toggleBtn, nextBtn);
+  }
 
   function showComplete() {
     view.dataset.phase = 'done';

@@ -377,3 +377,165 @@ test('Session plays a block all on one side then the other; count covers every h
   assert.deepEqual(changes, ['X:left', 'Y:left', 'X:right', 'Y:right']);
   assert.equal(count, 4); // two stretches × two sides, each its own progress unit
 });
+
+// --- itemIndex + pause-between-stretches (auto-advance) ---
+
+test('expandRoutine: itemIndex groups a block under one item; plain items each increment', () => {
+  const lib = { ...LIBRARY, ...BLOCK_LIB };
+  /** @type {import('../js/types.js').Routine} */
+  const routine = {
+    id: 'r',
+    name: 'R',
+    description: '',
+    builtIn: true,
+    items: [
+      { stretchId: 'a', seconds: 30 },
+      {
+        block: [
+          { stretchId: 'x', seconds: 30 },
+          { stretchId: 'y', seconds: 20 },
+        ],
+      },
+      { stretchId: 'a', seconds: 10 },
+    ],
+  };
+  const steps = expandRoutine(routine, lib, { prepSeconds: 5, switchSeconds: 3 });
+  assert.deepEqual(
+    steps.map((s) => [s.itemIndex, s.stretchIndex, s.type, s.side]),
+    [
+      [0, 0, 'prep', null],
+      [0, 0, 'hold', null],
+      [1, 1, 'prep', 'left'], // block: one item, inner holds share itemIndex 1
+      [1, 1, 'hold', 'left'], // X left
+      [1, 2, 'hold', 'left'], // Y left
+      [1, 3, 'switch', 'right'],
+      [1, 3, 'hold', 'right'], // X right
+      [1, 4, 'hold', 'right'], // Y right
+      [2, 5, 'prep', null],
+      [2, 5, 'hold', null],
+    ],
+  );
+});
+
+test('auto-advance off: session waits at each new routine item until proceed()', () => {
+  const h = makeHarness();
+  const steps = expandRoutine(ROUTINE, LIBRARY, SETTINGS);
+  /** @type {string[]} */
+  const changes = [];
+  /** @type {string[]} */
+  const waits = [];
+  let completes = 0;
+  const s = new Session(
+    steps,
+    {
+      onStepChange: (step) => changes.push(`${step.type}:${step.side}`),
+      onWaiting: (step) => waits.push(`${step.type}:${step.side}@${Math.round(s.elapsedMs())}`),
+      onComplete: () => completes++,
+    },
+    h,
+    { autoAdvance: false },
+  );
+  s.start();
+  // Item 0 (prep a, hold a) plays; the session then holds before item 1.
+  for (let k = 0; k < 45 && !s.waiting; k++) {
+    h.advance(1000);
+    h.frame();
+  }
+  assert.equal(s.waiting, true);
+  assert.deepEqual(changes, ['prep:null', 'hold:null'], 'item 1 has not started');
+  assert.deepEqual(waits, ['prep:left@35000'], 'waiting announced at the item-1 boundary');
+
+  // The clock is frozen at the boundary while waiting, no matter how much time passes.
+  h.advance(50_000);
+  h.frame();
+  assert.equal(Math.round(s.elapsedMs()), 35_000, 'clock frozen at the boundary while waiting');
+  assert.deepEqual(changes, ['prep:null', 'hold:null']);
+
+  // proceed() plays item 1 through to completion; only the one boundary ever waited.
+  s.proceed();
+  for (let k = 0; k < 60 && !s.completed; k++) {
+    h.advance(1000);
+    h.frame();
+  }
+  assert.deepEqual(changes, [
+    'prep:null',
+    'hold:null',
+    'prep:left',
+    'hold:left',
+    'switch:right',
+    'hold:right',
+  ]);
+  assert.equal(completes, 1);
+  assert.equal(waits.length, 1, 'only the a→b item boundary triggers a wait');
+});
+
+test('auto-advance off: transitions within one item (per-side / block) never wait', () => {
+  const h = makeHarness();
+  /** @type {import('../js/types.js').Routine} */
+  const routine = {
+    id: 'r',
+    name: 'R',
+    description: '',
+    builtIn: true,
+    items: [{ stretchId: 'b', seconds: 1 }], // one per-side stretch = one item
+  };
+  const steps = expandRoutine(routine, LIBRARY, { prepSeconds: 0, switchSeconds: 1 });
+  /** @type {string[]} */
+  const changes = [];
+  let waits = 0;
+  let completes = 0;
+  const s = new Session(
+    steps,
+    {
+      onStepChange: (step) => changes.push(`${step.type}:${step.side}`),
+      onWaiting: () => waits++,
+      onComplete: () => completes++,
+    },
+    h,
+    { autoAdvance: false },
+  );
+  s.start();
+  for (let k = 0; k < 20 && !s.completed; k++) {
+    h.advance(1000);
+    h.frame();
+  }
+  assert.deepEqual(changes, ['hold:left', 'switch:right', 'hold:right']);
+  assert.equal(waits, 0, 'left→right within one item does not wait');
+  assert.equal(completes, 1);
+});
+
+test('auto-advance on (default): plays straight through with no onWaiting', () => {
+  const h = makeHarness();
+  const steps = expandRoutine(ROUTINE, LIBRARY, SETTINGS);
+  let waits = 0;
+  let completes = 0;
+  const s = new Session(steps, { onWaiting: () => waits++, onComplete: () => completes++ }, h);
+  s.start();
+  for (let k = 0; k < 90 && !s.completed; k++) {
+    h.advance(1000);
+    h.frame();
+  }
+  assert.equal(waits, 0);
+  assert.equal(completes, 1);
+});
+
+test('auto-advance off: next() plays through the gate (explicit navigation, no wait)', () => {
+  const h = makeHarness();
+  const steps = expandRoutine(ROUTINE, LIBRARY, SETTINGS);
+  /** @type {string[]} */
+  const changes = [];
+  let waits = 0;
+  const s = new Session(
+    steps,
+    { onStepChange: (step) => changes.push(`${step.type}:${step.side}`), onWaiting: () => waits++ },
+    h,
+    { autoAdvance: false },
+  );
+  s.start();
+  h.advance(10_000); // into hold a
+  h.frame();
+  s.next(); // skip to stretch b
+  assert.equal(waits, 0, 'an explicit skip does not enter the wait state');
+  assert.equal(s.waiting, false);
+  assert.equal(changes.at(-1), 'prep:left');
+});

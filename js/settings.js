@@ -17,6 +17,7 @@
  * @property {boolean} countIn Tick each of the final three seconds of a hold.
  * @property {boolean} vibration Haptic buzz at transitions (where supported).
  * @property {boolean} keepAwake Hold a screen wake lock during a session (where supported).
+ * @property {boolean} autoAdvance Flow straight into each stretch; when false, wait for a tap.
  */
 
 /** @type {AppSettings} */
@@ -28,6 +29,7 @@ export const DEFAULT_SETTINGS = {
   countIn: true,
   vibration: true,
   keepAwake: true,
+  autoAdvance: true,
 };
 
 /** @type {AppSettings} */

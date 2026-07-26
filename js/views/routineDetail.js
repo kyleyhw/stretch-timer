@@ -3,7 +3,7 @@
  * a labelled group.
  */
 
-import { el, clear } from '../ui.js';
+import { el, clear, icon } from '../ui.js';
 import { getStretch, routineHoldSeconds } from '../data.js';
 
 /** @typedef {import('../types.js').Routine} Routine */
@@ -66,7 +66,7 @@ export function mountRoutineDetail(container, ctx) {
     }
   }
 
-  const backBtn = el('button', { class: 'icon-btn', 'aria-label': 'Back', text: '‹' });
+  const backBtn = el('button', { class: 'icon-btn', 'aria-label': 'Back' }, icon('back'));
   backBtn.addEventListener('click', ctx.onBack);
 
   const startBtn = el('button', { class: 'ctrl-btn start-cta', text: 'Start routine' });
@@ -74,11 +74,11 @@ export function mountRoutineDetail(container, ctx) {
 
   const headerChildren = [backBtn, el('h1', { class: 'detail-title', text: r.name })];
   if (ctx.onEdit) {
-    const editBtn = el('button', {
-      class: 'icon-btn detail-edit',
-      'aria-label': 'Edit',
-      text: '✎',
-    });
+    const editBtn = el(
+      'button',
+      { class: 'icon-btn detail-edit', 'aria-label': 'Edit' },
+      icon('edit'),
+    );
     editBtn.addEventListener('click', ctx.onEdit);
     headerChildren.push(editBtn);
   }

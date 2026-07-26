@@ -207,6 +207,9 @@ export class Countdown {
   _tick() {
     const remaining = Math.max(0, this._endAt - this._now());
     if (this._onTick) this._onTick(remaining);
+    // A tick handler may pause/stop the countdown (e.g. the session waiting at an item boundary);
+    // honour that instead of rescheduling another frame.
+    if (!this._running) return;
     if (remaining <= 0) {
       this._remaining = 0;
       this._running = false;
