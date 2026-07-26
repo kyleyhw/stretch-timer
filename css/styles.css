@@ -146,6 +146,20 @@ body {
   }
 }
 
+/* Where the View Transitions API is supported it drives the route cross-fade, so the per-view
+   entrance animation is dropped to avoid animating twice. Browsers without it keep `view-in`. */
+@supports (view-transition-name: none) {
+  .view {
+    animation: none;
+  }
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+  animation-timing-function: var(--ease);
+}
+
 /* --- Buttons --- */
 button {
   font: inherit;

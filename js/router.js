@@ -45,7 +45,7 @@ export function createRouter(routes, notFound) {
     cleanup = typeof c === 'function' ? c : null;
   }
 
-  function resolve() {
+  function swapView() {
     const raw = location.hash.replace(/^#/, '') || '/';
     const qIndex = raw.indexOf('?');
     const path = (qIndex >= 0 ? raw.slice(0, qIndex) : raw) || '/';
@@ -62,6 +62,19 @@ export function createRouter(routes, notFound) {
       }
     }
     if (notFound) setCleanup(notFound());
+  }
+
+  function resolve() {
+    // Cross-fade between views via the View Transitions API where supported (and motion is allowed);
+    // elsewhere the swap is instant and each view's own entrance animation carries the transition.
+    const reduce =
+      typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const startVT = /** @type {any} */ (document).startViewTransition;
+    if (!reduce && typeof startVT === 'function') {
+      startVT.call(document, swapView);
+    } else {
+      swapView();
+    }
   }
 
   window.addEventListener('hashchange', resolve);

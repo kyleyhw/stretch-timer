@@ -74,3 +74,20 @@ Fixed engineering decisions (rationale in [`docs/`](docs/index.md)):
 26. [completed] Per-side **block** construct: `SideBlock` type (discriminated union with `StretchRef`), `expandRoutine` grouping (all-left → switch → all-right, one progress unit per hold), editor create/edit UI, detail rendering; 3 unit tests.
 27. [completed] Built-in **Climbing** routine — shoulders ×2, standing/seated straddle, groin (frog), supermodel, butterfly, 4 forearm variants, calves, a deep-lunge/hamstring/quad per-side block, and pigeon; 30 s holds. Verified in Chromium that the block plays all-left then all-right (19 units).
 28. [completed] Commit authorship — new commits use `kyleyhw <kyleyhw@gmail.com>`. Decision (per user): leave the 10 pre-existing setup/build commits under the `Claude` author rather than rewrite history.
+
+## Phase 10: UI redesign & new features (follow-up)
+
+29. [completed] Design system rework: token-driven, dark-first, flat/2D minimalist with a muted warm
+    accent; `theme.js` + a Dark/Light/System control (pre-paint, no flash); circular countdown ring
+    enclosing the number; sound **off by default** with an in-player mute and muted-friendly cues
+    (phase flash + vibration); emoji-free inline SVG icon set (`ui.icon`).
+30. [completed] Pause between stretches: `Step.itemIndex`, `settings.autoAdvance`, session
+    `onWaiting`/`proceed()` gating at item boundaries, player "Next up" Continue screen; 5 tests.
+31. [completed] Custom stretches: `userStretches` store key + built-in ⊕ user merge with
+    upsert/delete and an in-use guard; editor "New stretch" form; Settings management; 6 data tests.
+32. [completed] Share / export: `{ v, routine, stretches }` payload, base64url `#/import?d=…` link
+    and `.json` file, import with full id regeneration/remapping; router query-string support; 6
+    tests.
+33. [completed] Polish: View Transitions route cross-fade (reduced-motion-aware, with a `view-in`
+    fallback); refreshed `docs/` and `README.md`. Final gate: typecheck, `node --test` (46 tests),
+    `pre-commit`, and Playwright verification with screenshots.

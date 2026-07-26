@@ -22,8 +22,10 @@ A **stretch** is a library entry; a **routine** is an ordered list of references
 ```
 
 A routine references stretches **by id**; each item may override the hold `seconds` while
-`perSide` remains a property of the stretch. Ids are namespaced — built-ins use human slugs, user
-content uses `user-<uuid>` — so the two never collide.
+`perSide` remains a property of the stretch. Ids are namespaced so nothing collides: built-in
+stretches and routines use human slugs, user **routines** use `user-<uuid>`, and user **stretches**
+(the custom library) use `ustr-<uuid>`. The stretch library `data.js` resolves against is the
+built-in map with the custom set merged over it.
 
 ## 2. Persistence layout (localStorage)
 
@@ -31,11 +33,12 @@ Built-in content is compiled into [`js/seed.js`](../js/seed.js) (Phase 4) and is
 mutated**. User content lives only in `localStorage` under versioned, namespaced keys (finalised
 in Phase 6):
 
-| Key                            | Value                                        |
-| ------------------------------ | -------------------------------------------- |
-| `stretchTimer.v1.userRoutines` | `Routine[]` with `builtIn: false`            |
-| `stretchTimer.v1.settings`     | `{ prepSeconds, switchSeconds, sound, … }`   |
-| `stretchTimer.v1.meta`         | `{ schemaVersion: 1 }` for future migrations |
+| Key                             | Value                                                          |
+| ------------------------------- | -------------------------------------------------------------- |
+| `stretchTimer.v1.userRoutines`  | `Routine[]` with `builtIn: false`                              |
+| `stretchTimer.v1.userStretches` | `Stretch[]` — the custom library (`ustr-<uuid>` ids)           |
+| `stretchTimer.v1.settings`      | `{ theme, prepSeconds, switchSeconds, sound, autoAdvance, … }` |
+| `stretchTimer.v1.meta`          | `{ schemaVersion: 1 }` for future migrations                   |
 
 Editing a built-in performs **duplicate-and-edit** — a deep copy into `userRoutines` with a fresh
 id — so seed content stays pristine and upgradeable across releases.
@@ -51,8 +54,11 @@ suppresses that step). For routine item $i$ referencing a stretch with hold $h_i
 | plain        | $[\text{prep}(p)]?,\ \text{hold}(h_i)$                                              |
 | per-side     | $[\text{prep}(p)]?,\ \text{hold}_L(h_i),\ [\text{switch}(w)]?,\ \text{hold}_R(h_i)$ |
 
-Every step carries its owning `stretchIndex` $= i$, so per-side holds all report the same "stretch
-$N$ of $M$" even though they are three or four steps.
+Every step carries its owning `stretchIndex` (the running hold-unit counter, so per-side holds all
+report the same "stretch $N$ of $M$" even though they are three or four steps) **and** an
+`itemIndex` — which routine item produced it. `stretchIndex` and `itemIndex` coincide for plain
+routines but diverge inside a block (§7), and `itemIndex` is what the optional pause-between mode
+keys on (§8).
 
 ## 4. Progress and the single-timeline model
 
@@ -126,3 +132,34 @@ The data shape is a discriminated union: a routine item is either a `StretchRef`
 [`js/session.js`](../js/session.js), and the block tests in
 [`tests/session.test.js`](../tests/session.test.js). The built-in **Climbing** routine
 ([`js/seed.js`](../js/seed.js)) uses a block for its deep-lunge / hamstring / quad trio.
+
+## 8. Pause between stretches (auto-advance)
+
+By default the session flows straight through. When `settings.autoAdvance` is off, it **waits for a
+tap between routine items**. The boundary is deliberately `itemIndex`, not `stretchIndex` or step
+index: a per-side stretch's own $L$/$R$ holds and a block's inner holds share one `itemIndex`, so
+they play uninterrupted; only a genuine move to the next item pauses.
+
+Concretely, a natural tick that first crosses into a step with a new `itemIndex` is intercepted: the
+session seeks back to that item's boundary $C_j$, pauses the countdown, and fires `onWaiting`. A tap
+calls `Session.proceed()` (named to avoid the `continue` reserved word), which resumes from $C_j$.
+Explicit navigation (skip/prev) pre-sets the "last item" marker so it plays through the gate rather
+than immediately re-waiting. This required one timer change — `Countdown._tick` now honours a
+pause performed _inside_ its own tick handler instead of rescheduling — so the session can freeze
+exactly on the boundary frame. See tests 16–20 in
+[`tests/session.test.js`](../tests/session.test.js).
+
+## 9. Share payload
+
+A routine is shared as a self-contained, version-tagged payload
+
+$$ \{\ v: 1,\ \text{routine},\ \text{stretches}: [\text{referenced custom stretches}]\ \}, $$
+
+carrying only the **custom** (`ustr-`) stretches it references — built-ins exist in every install.
+The payload is `JSON` → UTF-8 bytes → URL-safe base64 (`encodeShare`), travelling as a
+`#/import?d=<code>` link or a `.json` file. **Import** (`importSharePayload`) version-checks, then
+regenerates every id — a fresh `user-<uuid>` for the routine and a fresh `ustr-<uuid>` for each
+custom stretch, remapping all references (including inside blocks) through an id map — and drops any
+reference it cannot resolve. Regenerating ids means importing the same link twice, or importing a
+routine whose author reused an id you already have, can never overwrite existing content. See the
+share/export tests in [`tests/data.test.js`](../tests/data.test.js).

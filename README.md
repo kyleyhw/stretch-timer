@@ -18,16 +18,19 @@ haptic cues. Installable, works offline, runs on desktop and mobile.
 ## How to use
 
 - **Start a routine.** Tap a routine on the home screen to preview its stretches, then **Start**.
-- **During a session.** A large countdown shows the time left on the current stretch, with a
-  progress bar and "Stretch N of M". It beeps and vibrates at each change. Controls: **⏮** previous,
-  **Pause/Resume**, **⏭** skip. Per-side stretches run one side then the other. **✕** quits (with a
-  confirm).
-- **Make your own.** Tap **+ New routine**, give it a name, and add stretches (set the seconds for
-  each). You can add a **per-side block** — a group performed on one side, then the other — and
-  reorder or remove items. Edit (**✎**) or duplicate any built-in routine from its page. Your
-  routines are saved on your device.
-- **Settings (⚙).** Adjust get-ready time, switch-sides time, sound, count-in ticks, vibration, and
-  keep-screen-awake.
+- **During a session.** A circular countdown ring shows the time left on the current stretch, with
+  "Stretch N of M". Each change flashes the screen and vibrates, and beeps too if sound is on (the
+  mute button is in the top corner — sound is off by default). Controls: previous, Pause/Resume,
+  skip. Per-side stretches run one side then the other; the close button quits (with a confirm).
+- **Make your own.** Tap **New routine**, give it a name, and add stretches (set the seconds for
+  each). **New stretch** creates your own custom stretch (name, area, per-side); you can also add a
+  **per-side block** — a group performed on one side, then the other — and reorder or remove items.
+  Edit or duplicate any built-in routine from its page. Everything is saved on your device.
+- **Share a routine.** Open a routine and tap **Share** to copy a link or download a `.json` file;
+  opening a shared link (or **Import a routine** in Settings) adds a copy, custom stretches included.
+- **Settings.** Choose a theme (Dark / Light / System — dark by default), turn **Pause between
+  stretches** on to advance by tapping, adjust get-ready and switch-sides time, sound, count-in
+  ticks, vibration, and keep-screen-awake, and manage your custom stretches.
 
 ---
 
