@@ -48,6 +48,14 @@ const PREV_RESTART_GUARD_MS = 2000;
 /**
  * Expands a routine into a flat, ordered list of timed steps.
  *
+ * A plain stretch ref becomes `[prep?, hold]`, or `[prep?, holdL, switch?, holdR]` when the stretch
+ * is per-side. A per-side **block** is performed as a unit on one side, then the other:
+ * `[prep?, holdA_L, holdB_L, …, switch?, holdA_R, holdB_R, …]` — the block's sides drive the
+ * repetition, so each sub-stretch's own perSide flag is ignored. Every hold gets its own
+ * `stretchIndex` from a running unit counter, so progress numbering stays monotonic and skip
+ * navigates hold-by-hold. For non-block routines the counter equals the item index, so behaviour is
+ * unchanged.
+ *
  * @param {Routine} routine
  * @param {Record<string, Stretch>} stretchById Library keyed by stretch id.
  * @param {SessionSettings} settings
@@ -58,57 +66,101 @@ export function expandRoutine(routine, stretchById, settings) {
   const switchMs = Math.max(0, settings.switchSeconds) * 1000;
   /** @type {Step[]} */
   const steps = [];
+  let unit = 0;
 
-  routine.items.forEach((item, i) => {
-    const stretch = stretchById[item.stretchId];
-    if (!stretch) {
-      throw new Error(`expandRoutine: unknown stretchId "${item.stretchId}"`);
-    }
-    const holdMs = Math.max(0, item.seconds) * 1000;
-    const base = {
-      stretchIndex: i,
-      stretchName: stretch.name,
-      stretchDescription: stretch.description,
-    };
+  /** @param {string} id @returns {Stretch} */
+  const resolve = (id) => {
+    const stretch = stretchById[id];
+    if (!stretch) throw new Error(`expandRoutine: unknown stretchId "${id}"`);
+    return stretch;
+  };
 
-    if (prepMs > 0) {
-      steps.push({
-        ...base,
-        type: 'prep',
-        durationMs: prepMs,
-        side: stretch.perSide ? 'left' : null,
-        label: 'Get ready',
-      });
-    }
-
-    if (stretch.perSide) {
-      steps.push({
-        ...base,
-        type: 'hold',
-        durationMs: holdMs,
-        side: 'left',
-        label: 'Hold — left side',
-      });
-      if (switchMs > 0) {
-        steps.push({
-          ...base,
-          type: 'switch',
-          durationMs: switchMs,
-          side: 'right',
-          label: 'Switch sides',
+  for (const item of routine.items) {
+    if ('block' in item) {
+      const subs = item.block.map((ref) => ({ ref, stretch: resolve(ref.stretchId) }));
+      /** @type {Array<'left' | 'right'>} */
+      const sides = ['left', 'right'];
+      sides.forEach((side, sideIdx) => {
+        subs.forEach(({ ref, stretch }, k) => {
+          const base = {
+            stretchIndex: unit,
+            stretchName: stretch.name,
+            stretchDescription: stretch.description,
+          };
+          if (k === 0 && sideIdx === 0 && prepMs > 0) {
+            steps.push({
+              ...base,
+              type: 'prep',
+              durationMs: prepMs,
+              side,
+              label: 'Get ready — left side',
+            });
+          } else if (k === 0 && sideIdx === 1 && switchMs > 0) {
+            steps.push({
+              ...base,
+              type: 'switch',
+              durationMs: switchMs,
+              side,
+              label: 'Switch to right side',
+            });
+          }
+          steps.push({
+            ...base,
+            type: 'hold',
+            durationMs: Math.max(0, ref.seconds) * 1000,
+            side,
+            label: `Hold — ${side} side`,
+          });
+          unit++;
         });
-      }
-      steps.push({
-        ...base,
-        type: 'hold',
-        durationMs: holdMs,
-        side: 'right',
-        label: 'Hold — right side',
       });
     } else {
-      steps.push({ ...base, type: 'hold', durationMs: holdMs, side: null, label: 'Hold' });
+      const stretch = resolve(item.stretchId);
+      const holdMs = Math.max(0, item.seconds) * 1000;
+      const base = {
+        stretchIndex: unit,
+        stretchName: stretch.name,
+        stretchDescription: stretch.description,
+      };
+      if (prepMs > 0) {
+        steps.push({
+          ...base,
+          type: 'prep',
+          durationMs: prepMs,
+          side: stretch.perSide ? 'left' : null,
+          label: 'Get ready',
+        });
+      }
+      if (stretch.perSide) {
+        steps.push({
+          ...base,
+          type: 'hold',
+          durationMs: holdMs,
+          side: 'left',
+          label: 'Hold — left side',
+        });
+        if (switchMs > 0) {
+          steps.push({
+            ...base,
+            type: 'switch',
+            durationMs: switchMs,
+            side: 'right',
+            label: 'Switch sides',
+          });
+        }
+        steps.push({
+          ...base,
+          type: 'hold',
+          durationMs: holdMs,
+          side: 'right',
+          label: 'Hold — right side',
+        });
+      } else {
+        steps.push({ ...base, type: 'hold', durationMs: holdMs, side: null, label: 'Hold' });
+      }
+      unit++;
     }
-  });
+  }
 
   return steps;
 }

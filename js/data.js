@@ -110,6 +110,11 @@ export function getStretch(id) {
  */
 export function routineHoldSeconds(routine) {
   return routine.items.reduce((total, item) => {
+    if ('block' in item) {
+      // Every stretch in the block is performed on both sides.
+      const perSideTotal = item.block.reduce((sum, ref) => sum + ref.seconds, 0);
+      return total + perSideTotal * 2;
+    }
     const stretch = stretchById[item.stretchId];
     const sides = stretch && stretch.perSide ? 2 : 1;
     return total + item.seconds * sides;

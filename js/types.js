@@ -19,9 +19,23 @@
 
 /**
  * A reference to a stretch inside a routine, with an overridable hold duration.
- * @typedef {object} RoutineItem
+ * @typedef {object} StretchRef
  * @property {string} stretchId Id into the stretch library.
  * @property {number} seconds Hold seconds (per side if the stretch is perSide).
+ */
+
+/**
+ * A per-side block: its stretches are performed as a group on one side, then repeated on the other
+ * (all-left, switch, all-right). The block drives the sides, so each sub-stretch's own perSide flag
+ * is ignored inside it.
+ * @typedef {object} SideBlock
+ * @property {StretchRef[]} block Ordered stretches performed together per side.
+ */
+
+/**
+ * An item in a routine: either a single stretch reference or a per-side block. Discriminate at
+ * runtime with `'block' in item`.
+ * @typedef {StretchRef | SideBlock} RoutineItem
  */
 
 /**
@@ -31,7 +45,7 @@
  * @property {string} name Display name.
  * @property {string} description Short summary.
  * @property {boolean} builtIn True for seed routines (read-only), false for user routines.
- * @property {RoutineItem[]} items Ordered stretches.
+ * @property {RoutineItem[]} items Ordered stretches and/or per-side blocks.
  */
 
 /**

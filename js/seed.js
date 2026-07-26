@@ -210,6 +210,72 @@ export const STRETCHES = [
     defaultSeconds: 20,
     perSide: true,
   },
+  // Additional stretches used by custom sets
+  {
+    id: 'leg-spread-standing',
+    name: 'Standing Straddle Fold',
+    area: 'Adductors & hamstrings',
+    description: 'Stand with feet wide, hinge at the hips, and fold forward with a flat back.',
+    defaultSeconds: 30,
+    perSide: false,
+  },
+  {
+    id: 'groin-frog',
+    name: 'Frog Stretch',
+    area: 'Groin',
+    description: 'On hands and knees, widen the knees and gently ease the hips back.',
+    defaultSeconds: 30,
+    perSide: false,
+  },
+  {
+    id: 'supermodel',
+    name: 'Supermodel Stretch',
+    area: 'Hamstrings & IT band',
+    description: 'Cross one foot in front of the other and fold forward over the front leg.',
+    defaultSeconds: 30,
+    perSide: true,
+  },
+  {
+    id: 'leg-spread-sitting',
+    name: 'Seated Straddle Fold',
+    area: 'Adductors & hamstrings',
+    description: 'Sit with the legs wide and walk your hands forward between them.',
+    defaultSeconds: 30,
+    perSide: false,
+  },
+  {
+    id: 'forearm-palm-up',
+    name: 'Forearm — Palm Up',
+    area: 'Forearms',
+    description:
+      'Arm straight out, palm up; gently draw the fingers back and down with the other hand.',
+    defaultSeconds: 30,
+    perSide: true,
+  },
+  {
+    id: 'forearm-palm-down',
+    name: 'Forearm — Palm Down',
+    area: 'Forearms',
+    description: 'Arm straight out, palm down; gently press the back of the hand toward you.',
+    defaultSeconds: 30,
+    perSide: true,
+  },
+  {
+    id: 'forearm-fingers-up',
+    name: 'Forearm — Fingers Up',
+    area: 'Forearms',
+    description: 'Arm out, palm away and fingers up; ease the fingers back toward you.',
+    defaultSeconds: 30,
+    perSide: true,
+  },
+  {
+    id: 'forearm-fingers-down',
+    name: 'Forearm — Fingers Down',
+    area: 'Forearms',
+    description: 'Arm out, palm in and fingers down; gently draw the fingers toward you.',
+    defaultSeconds: 30,
+    perSide: true,
+  },
 ];
 
 /**
@@ -225,8 +291,50 @@ function items(ids) {
   });
 }
 
+/**
+ * A single stretch reference with an explicit hold duration.
+ * @param {string} id
+ * @param {number} seconds
+ * @returns {import('./types.js').StretchRef}
+ */
+function ref(id, seconds) {
+  if (!STRETCHES.some((s) => s.id === id)) throw new Error(`seed: unknown stretch id "${id}"`);
+  return { stretchId: id, seconds };
+}
+
+/**
+ * A per-side block of stretch references (performed all on one side, then the other).
+ * @param {import('./types.js').StretchRef[]} refs
+ * @returns {import('./types.js').SideBlock}
+ */
+function block(refs) {
+  return { block: refs };
+}
+
 /** @type {Routine[]} */
 export const ROUTINES = [
+  {
+    id: 'climbing',
+    name: 'Climbing',
+    description: 'Shoulders, hips, forearms and legs — the leg trio runs as a per-side block.',
+    builtIn: true,
+    items: [
+      ref('shoulder-cross', 30),
+      ref('tricep-overhead', 30),
+      ref('leg-spread-standing', 30),
+      ref('groin-frog', 30),
+      ref('supermodel', 30),
+      ref('butterfly', 30),
+      ref('leg-spread-sitting', 30),
+      ref('forearm-palm-up', 30),
+      ref('forearm-palm-down', 30),
+      ref('forearm-fingers-up', 30),
+      ref('forearm-fingers-down', 30),
+      ref('calf-wall', 30),
+      block([ref('hip-flexor-lunge', 30), ref('hamstring-standing', 30), ref('quad-standing', 30)]),
+      ref('pigeon', 30),
+    ],
+  },
   {
     id: 'morning-wakeup',
     name: 'Morning Wake-Up',

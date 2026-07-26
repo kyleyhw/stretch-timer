@@ -1,13 +1,15 @@
 /**
- * @file Routine editor: create or edit a user routine (name, description, ordered stretches with
- * per-item durations). Built-in routines are edited as a fresh user-owned copy (handled by the
- * caller, which passes an already-copied routine with a new id).
+ * @file Routine editor: create or edit a user routine — name, description, and an ordered list of
+ * stretches and/or per-side blocks (each with per-item durations). Built-in routines are edited as
+ * a fresh user-owned copy (the caller passes a copy with a new id).
  */
 
 import { el, clear } from '../ui.js';
 
 /** @typedef {import('../types.js').Routine} Routine */
 /** @typedef {import('../types.js').RoutineItem} RoutineItem */
+/** @typedef {import('../types.js').StretchRef} StretchRef */
+/** @typedef {import('../types.js').SideBlock} SideBlock */
 /** @typedef {import('../types.js').Stretch} Stretch */
 
 /**
@@ -20,6 +22,19 @@ import { el, clear } from '../ui.js';
  * @property {() => void} onDelete
  * @property {() => void} onCancel
  */
+
+/**
+ * @template T
+ * @param {T[]} arr
+ * @param {number} i
+ * @param {number} j
+ * @returns {void}
+ */
+function swap(arr, i, j) {
+  const tmp = arr[i];
+  arr[i] = arr[j];
+  arr[j] = tmp;
+}
 
 /**
  * @param {HTMLElement} container
@@ -35,7 +50,9 @@ export function mountEditor(container, ctx) {
     name: ctx.routine.name,
     description: ctx.routine.description,
     builtIn: false,
-    items: ctx.routine.items.map((it) => ({ ...it })),
+    items: ctx.routine.items.map((it) =>
+      'block' in it ? { block: it.block.map((r) => ({ ...r })) } : { ...it },
+    ),
   };
 
   const nameInput = /** @type {HTMLInputElement} */ (
@@ -55,16 +72,44 @@ export function mountEditor(container, ctx) {
     draft.description = descInput.value;
   });
 
-  const itemsList = el('ol', { class: 'editor-items' });
+  const itemsList = el('div', { class: 'editor-items' });
+
+  /** @returns {HTMLSelectElement} A fresh stretch picker grouped by area. */
+  function buildPicker() {
+    const select = el('select', { class: 'field-input' });
+    /** @type {Map<string, Stretch[]>} */
+    const byArea = new Map();
+    for (const s of ctx.stretches) {
+      const list = byArea.get(s.area) ?? [];
+      list.push(s);
+      byArea.set(s.area, list);
+    }
+    for (const [area, list] of byArea) {
+      const group = el('optgroup', { label: area });
+      for (const s of list) group.append(el('option', { value: s.id, text: s.name }));
+      select.append(group);
+    }
+    return /** @type {HTMLSelectElement} */ (select);
+  }
 
   /**
-   * @param {RoutineItem} item
-   * @param {number} i
+   * @typedef {object} RowOps
+   * @property {boolean} canUp
+   * @property {boolean} canDown
+   * @property {() => void} onUp
+   * @property {() => void} onDown
+   * @property {() => void} onRemove
+   */
+
+  /**
+   * @param {StretchRef} refItem
+   * @param {RowOps} ops
+   * @param {boolean} sub True when the row is inside a block.
    * @returns {HTMLElement}
    */
-  function renderItemRow(item, i) {
-    const s = ctx.stretchMap[item.stretchId];
-    const name = s ? s.name : item.stretchId;
+  function refRow(refItem, ops, sub) {
+    const s = ctx.stretchMap[refItem.stretchId];
+    const name = s ? s.name : refItem.stretchId;
     const secInput = /** @type {HTMLInputElement} */ (
       el('input', {
         class: 'sec-input',
@@ -75,40 +120,30 @@ export function mountEditor(container, ctx) {
         'aria-label': `Seconds for ${name}`,
       })
     );
-    secInput.value = String(item.seconds);
+    secInput.value = String(refItem.seconds);
     secInput.addEventListener('change', () => {
-      const v = Math.max(5, Math.min(300, Number(secInput.value) || item.seconds));
-      item.seconds = v;
+      const v = Math.max(5, Math.min(300, Number(secInput.value) || refItem.seconds));
+      refItem.seconds = v;
       secInput.value = String(v);
     });
 
-    const up = el('button', { class: 'mini-btn', 'aria-label': 'Move up', text: '↑' });
-    const down = el('button', { class: 'mini-btn', 'aria-label': 'Move down', text: '↓' });
+    const up = /** @type {HTMLButtonElement} */ (
+      el('button', { class: 'mini-btn', 'aria-label': 'Move up', text: '↑' })
+    );
+    const down = /** @type {HTMLButtonElement} */ (
+      el('button', { class: 'mini-btn', 'aria-label': 'Move down', text: '↓' })
+    );
     const del = el('button', { class: 'mini-btn', 'aria-label': 'Remove', text: '✕' });
-    up.addEventListener('click', () => {
-      if (i > 0) {
-        [draft.items[i - 1], draft.items[i]] = [draft.items[i], draft.items[i - 1]];
-        renderItems();
-      }
-    });
-    down.addEventListener('click', () => {
-      if (i < draft.items.length - 1) {
-        [draft.items[i + 1], draft.items[i]] = [draft.items[i], draft.items[i + 1]];
-        renderItems();
-      }
-    });
-    del.addEventListener('click', () => {
-      draft.items.splice(i, 1);
-      renderItems();
-    });
+    up.disabled = !ops.canUp;
+    down.disabled = !ops.canDown;
+    up.addEventListener('click', ops.onUp);
+    down.addEventListener('click', ops.onDown);
+    del.addEventListener('click', ops.onRemove);
 
     return el(
-      'li',
-      { class: 'editor-item' },
-      el('span', {
-        class: 'editor-item-name',
-        text: name + (s && s.perSide ? ' · per side' : ''),
-      }),
+      'div',
+      { class: `editor-item${sub ? ' editor-item--sub' : ''}` },
+      el('span', { class: 'editor-item-name', text: name }),
       el(
         'span',
         { class: 'editor-item-controls' },
@@ -121,44 +156,148 @@ export function mountEditor(container, ctx) {
     );
   }
 
+  /**
+   * @param {SideBlock} blockItem
+   * @param {number} index Position in draft.items.
+   * @returns {HTMLElement}
+   */
+  function blockCard(blockItem, index) {
+    const up = /** @type {HTMLButtonElement} */ (
+      el('button', { class: 'mini-btn', 'aria-label': 'Move block up', text: '↑' })
+    );
+    const down = /** @type {HTMLButtonElement} */ (
+      el('button', { class: 'mini-btn', 'aria-label': 'Move block down', text: '↓' })
+    );
+    const del = el('button', { class: 'mini-btn', 'aria-label': 'Remove block', text: '✕' });
+    up.disabled = index === 0;
+    down.disabled = index === draft.items.length - 1;
+    up.addEventListener('click', () => {
+      swap(draft.items, index, index - 1);
+      renderItems();
+    });
+    down.addEventListener('click', () => {
+      swap(draft.items, index, index + 1);
+      renderItems();
+    });
+    del.addEventListener('click', () => {
+      draft.items.splice(index, 1);
+      renderItems();
+    });
+
+    const subList = el('div', { class: 'editor-block-list' });
+    if (blockItem.block.length === 0) {
+      subList.append(el('p', { class: 'editor-empty', text: 'Add stretches to this block.' }));
+    } else {
+      blockItem.block.forEach((sub, j) => {
+        subList.append(
+          refRow(
+            sub,
+            {
+              canUp: j > 0,
+              canDown: j < blockItem.block.length - 1,
+              onUp: () => {
+                swap(blockItem.block, j, j - 1);
+                renderItems();
+              },
+              onDown: () => {
+                swap(blockItem.block, j, j + 1);
+                renderItems();
+              },
+              onRemove: () => {
+                blockItem.block.splice(j, 1);
+                renderItems();
+              },
+            },
+            true,
+          ),
+        );
+      });
+    }
+
+    const picker = buildPicker();
+    const addBtn = el('button', { class: 'ctrl-btn', text: 'Add to block' });
+    addBtn.addEventListener('click', () => {
+      const s = ctx.stretchMap[picker.value];
+      if (s) {
+        blockItem.block.push({ stretchId: s.id, seconds: s.defaultSeconds });
+        renderItems();
+      }
+    });
+
+    return el(
+      'div',
+      { class: 'editor-block-card' },
+      el(
+        'div',
+        { class: 'editor-block-header' },
+        el('span', { class: 'editor-block-title', text: 'Per-side block' }),
+        el('span', { class: 'editor-item-controls' }, up, down, del),
+      ),
+      subList,
+      el('div', { class: 'editor-add editor-block-add' }, picker, addBtn),
+    );
+  }
+
   function renderItems() {
     clear(itemsList);
     if (draft.items.length === 0) {
       itemsList.append(
-        el('li', { class: 'editor-empty', text: 'No stretches yet — add one below.' }),
+        el('p', { class: 'editor-empty', text: 'No stretches yet — add one below.' }),
       );
       return;
     }
-    draft.items.forEach((item, i) => itemsList.append(renderItemRow(item, i)));
+    draft.items.forEach((item, i) => {
+      if ('block' in item) {
+        itemsList.append(blockCard(item, i));
+      } else {
+        itemsList.append(
+          refRow(
+            item,
+            {
+              canUp: i > 0,
+              canDown: i < draft.items.length - 1,
+              onUp: () => {
+                swap(draft.items, i, i - 1);
+                renderItems();
+              },
+              onDown: () => {
+                swap(draft.items, i, i + 1);
+                renderItems();
+              },
+              onRemove: () => {
+                draft.items.splice(i, 1);
+                renderItems();
+              },
+            },
+            false,
+          ),
+        );
+      }
+    });
   }
 
-  // Picker: stretches grouped by area.
-  const picker = /** @type {HTMLSelectElement} */ (el('select', { class: 'field-input' }));
-  /** @type {Map<string, Stretch[]>} */
-  const byArea = new Map();
-  for (const s of ctx.stretches) {
-    const list = byArea.get(s.area) ?? [];
-    list.push(s);
-    byArea.set(s.area, list);
-  }
-  for (const [area, list] of byArea) {
-    const group = el('optgroup', { label: area });
-    for (const s of list) group.append(el('option', { value: s.id, text: s.name }));
-    picker.append(group);
-  }
-  const addBtn = el('button', { class: 'ctrl-btn', text: 'Add' });
-  addBtn.addEventListener('click', () => {
-    const s = ctx.stretchMap[picker.value];
+  // Top-level add controls.
+  const topPicker = buildPicker();
+  const addStretchBtn = el('button', { class: 'ctrl-btn', text: 'Add' });
+  addStretchBtn.addEventListener('click', () => {
+    const s = ctx.stretchMap[topPicker.value];
     if (s) {
       draft.items.push({ stretchId: s.id, seconds: s.defaultSeconds });
       renderItems();
     }
+  });
+  const addBlockBtn = el('button', { class: 'ctrl-btn', text: '+ Per-side block' });
+  addBlockBtn.addEventListener('click', () => {
+    draft.items.push({ block: [] });
+    renderItems();
   });
 
   const saveBtn = el('button', { class: 'ctrl-btn start-cta', text: 'Save routine' });
   const errorMsg = el('p', { class: 'editor-error', role: 'alert' });
   saveBtn.addEventListener('click', () => {
     draft.name = nameInput.value.trim();
+    // Drop empty blocks before validating.
+    draft.items = draft.items.filter((it) => !('block' in it) || it.block.length > 0);
     if (!draft.name) {
       nameInput.classList.add('field-error');
       nameInput.focus();
@@ -206,7 +345,7 @@ export function mountEditor(container, ctx) {
       ),
       el('h2', { class: 'editor-subhead', text: 'Stretches' }),
       itemsList,
-      el('div', { class: 'editor-add' }, picker, addBtn),
+      el('div', { class: 'editor-add' }, topPicker, addStretchBtn, addBlockBtn),
       errorMsg,
       actions,
     ),

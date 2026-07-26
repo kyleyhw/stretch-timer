@@ -1,11 +1,13 @@
 /**
- * @file Routine detail view: preview a routine's stretches and start it.
+ * @file Routine detail view: preview a routine's stretches and start it. Per-side blocks render as
+ * a labelled group.
  */
 
 import { el, clear } from '../ui.js';
 import { getStretch, routineHoldSeconds } from '../data.js';
 
 /** @typedef {import('../types.js').Routine} Routine */
+/** @typedef {import('../types.js').StretchRef} StretchRef */
 
 /**
  * @param {HTMLElement} container
@@ -16,28 +18,53 @@ export function mountRoutineDetail(container, ctx) {
   clear(container);
   const r = ctx.routine;
   const mins = Math.max(1, Math.round(routineHoldSeconds(r) / 60));
+  const stretchCount = r.items.reduce((n, it) => n + ('block' in it ? it.block.length : 1), 0);
 
-  const rows = el(
-    'ol',
-    { class: 'stretch-list' },
-    r.items.map((item) => {
-      const s = getStretch(item.stretchId);
-      const name = s ? s.name : item.stretchId;
-      const area = s ? s.area : '';
-      const perSide = Boolean(s && s.perSide);
-      return el(
-        'li',
-        { class: 'stretch-row' },
+  /**
+   * @param {StretchRef} refItem
+   * @param {boolean} inBlock True when inside a per-side block (both sides implied).
+   * @returns {HTMLElement}
+   */
+  function stretchRow(refItem, inBlock) {
+    const s = getStretch(refItem.stretchId);
+    const name = s ? s.name : refItem.stretchId;
+    const area = s ? s.area : '';
+    const perSide = Boolean(s && s.perSide) && !inBlock;
+    return el(
+      'li',
+      { class: `stretch-row${inBlock ? ' stretch-row--sub' : ''}` },
+      el(
+        'div',
+        { class: 'stretch-row-main' },
+        el('span', { class: 'stretch-row-name', text: name }),
+        el('span', { class: 'stretch-row-area', text: area }),
+      ),
+      el('span', {
+        class: 'stretch-row-time',
+        text: `${refItem.seconds}s${perSide ? ' ×2' : ''}`,
+      }),
+    );
+  }
+
+  const rows = el('ol', { class: 'stretch-list' });
+  for (const item of r.items) {
+    if ('block' in item) {
+      rows.append(
         el(
-          'div',
-          { class: 'stretch-row-main' },
-          el('span', { class: 'stretch-row-name', text: name }),
-          el('span', { class: 'stretch-row-area', text: area }),
+          'li',
+          { class: 'stretch-block' },
+          el('span', { class: 'stretch-block-label', text: 'Per-side block — each side in turn' }),
+          el(
+            'ol',
+            { class: 'stretch-block-list' },
+            item.block.map((sub) => stretchRow(sub, true)),
+          ),
         ),
-        el('span', { class: 'stretch-row-time', text: `${item.seconds}s${perSide ? ' ×2' : ''}` }),
       );
-    }),
-  );
+    } else {
+      rows.append(stretchRow(item, false));
+    }
+  }
 
   const backBtn = el('button', { class: 'icon-btn', 'aria-label': 'Back', text: '‹' });
   backBtn.addEventListener('click', ctx.onBack);
@@ -61,7 +88,7 @@ export function mountRoutineDetail(container, ctx) {
       'section',
       { class: 'view view-detail' },
       el('header', { class: 'detail-header' }, headerChildren),
-      el('p', { class: 'detail-sub', text: `~${mins} min · ${r.items.length} stretches` }),
+      el('p', { class: 'detail-sub', text: `~${mins} min · ${stretchCount} stretches` }),
       r.description ? el('p', { class: 'detail-desc', text: r.description }) : null,
       rows,
       el('div', { class: 'detail-actions' }, startBtn),

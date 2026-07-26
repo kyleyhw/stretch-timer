@@ -100,3 +100,29 @@ Skipping is a **seek** on the session timeline, i.e. `Countdown.setRemaining(S -
 
 The $2000$ ms guard mirrors the familiar media-player behaviour: skip-back restarts the current
 item, but a second quick skip-back goes to the previous one.
+
+## 7. Per-side blocks
+
+A routine item may be a **side block**: an ordered group of stretches performed together on one
+side, then repeated on the other, rather than switching sides within each stretch. A block
+$[A, B, C]$ expands to
+
+$$[\text{prep}?,\ A_L, B_L, C_L,\ \text{switch}?,\ A_R, B_R, C_R],$$
+
+all of side $L$ then all of side $R$, with a single get-ready before the block and one switch
+between sides. The block drives the sides, so each sub-stretch's own `perSide` flag is ignored
+inside it.
+
+Unlike a plain per-side stretch — whose $L$/$R$ holds share one $\text{stretchIndex}$ because they
+run back-to-back — each block hold is temporally separate, so **each hold gets its own
+$\text{stretchIndex}$** from the running unit counter. Progress numbering stays monotonic
+($A_L, B_L, C_L$ at units $u, u{+}1, u{+}2$; $A_R, B_R, C_R$ at $u{+}3, u{+}4, u{+}5$) and skip
+navigates hold-by-hold. For a routine with no blocks the counter equals the item index, so all
+earlier behaviour is unchanged.
+
+The data shape is a discriminated union: a routine item is either a `StretchRef`
+(`{ stretchId, seconds }`) or a `SideBlock` (`{ block: StretchRef[] }`), distinguished at runtime by
+`'block' in item`. See [`js/types.js`](../js/types.js), the expansion in
+[`js/session.js`](../js/session.js), and the block tests in
+[`tests/session.test.js`](../tests/session.test.js). The built-in **Climbing** routine
+([`js/seed.js`](../js/seed.js)) uses a block for its deep-lunge / hamstring / quad trio.

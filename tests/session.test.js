@@ -273,3 +273,107 @@ test('reconcile() lands on the correct step after a long hidden gap', () => {
   h.frame();
   assert.equal(completes, 1);
 });
+
+/** @type {Record<string, import('../js/types.js').Stretch>} */
+const BLOCK_LIB = {
+  x: { id: 'x', name: 'X', area: '', description: 'dx', defaultSeconds: 30, perSide: false },
+  y: { id: 'y', name: 'Y', area: '', description: 'dy', defaultSeconds: 20, perSide: true },
+};
+
+test('expandRoutine: a per-side block runs all stretches on one side, then the other', () => {
+  /** @type {import('../js/types.js').Routine} */
+  const routine = {
+    id: 'r',
+    name: 'R',
+    description: '',
+    builtIn: true,
+    items: [
+      {
+        block: [
+          { stretchId: 'x', seconds: 30 },
+          { stretchId: 'y', seconds: 20 },
+        ],
+      },
+    ],
+  };
+  const steps = expandRoutine(routine, BLOCK_LIB, { prepSeconds: 5, switchSeconds: 3 });
+  assert.deepEqual(
+    steps.map((s) => [s.type, s.side, s.stretchName, s.durationMs, s.stretchIndex]),
+    [
+      ['prep', 'left', 'X', 5000, 0],
+      ['hold', 'left', 'X', 30000, 0],
+      ['hold', 'left', 'Y', 20000, 1],
+      ['switch', 'right', 'X', 3000, 2],
+      ['hold', 'right', 'X', 30000, 2],
+      ['hold', 'right', 'Y', 20000, 3],
+    ],
+  );
+});
+
+test('expandRoutine: block honours prep/switch = 0 (holds only, grouped by side)', () => {
+  /** @type {import('../js/types.js').Routine} */
+  const routine = {
+    id: 'r',
+    name: 'R',
+    description: '',
+    builtIn: true,
+    items: [
+      {
+        block: [
+          { stretchId: 'x', seconds: 30 },
+          { stretchId: 'y', seconds: 20 },
+        ],
+      },
+    ],
+  };
+  const steps = expandRoutine(routine, BLOCK_LIB, { prepSeconds: 0, switchSeconds: 0 });
+  assert.deepEqual(
+    steps.map((s) => [s.type, s.side, s.stretchName]),
+    [
+      ['hold', 'left', 'X'],
+      ['hold', 'left', 'Y'],
+      ['hold', 'right', 'X'],
+      ['hold', 'right', 'Y'],
+    ],
+  );
+});
+
+test('Session plays a block all on one side then the other; count covers every hold', () => {
+  const h = makeHarness();
+  /** @type {import('../js/types.js').Routine} */
+  const routine = {
+    id: 'r',
+    name: 'R',
+    description: '',
+    builtIn: true,
+    items: [
+      {
+        block: [
+          { stretchId: 'x', seconds: 1 },
+          { stretchId: 'y', seconds: 1 },
+        ],
+      },
+    ],
+  };
+  const steps = expandRoutine(routine, BLOCK_LIB, { prepSeconds: 0, switchSeconds: 0 });
+  /** @type {string[]} */
+  const changes = [];
+  let count = 0;
+  const s = new Session(
+    steps,
+    {
+      onStepChange: (step, info) => {
+        changes.push(`${step.stretchName}:${step.side}`);
+        count = info.stretchCount;
+      },
+    },
+    h,
+  );
+  s.start();
+  for (let k = 0; k < 10 && !s.completed; k++) {
+    h.advance(1000);
+    h.frame();
+  }
+  assert.deepEqual(changes, ['X:left', 'Y:left', 'X:right', 'Y:right']);
+  assert.equal(count, 4); // two stretches × two sides, each its own progress unit
+});
