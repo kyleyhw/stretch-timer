@@ -1,109 +1,32 @@
 # Stretch Timer
 
-A guided stretching-timer PWA that counts down each stretch hold with audio and haptic cues.
-Built as a dependency-free, installable web app that runs offline on desktop and mobile, with
-the goal of removing the friction of timing a stretching routine by hand.
+A guided stretching-timer web app: pick a routine and it counts down each stretch with audio and
+haptic cues. Installable, works offline, runs on desktop and mobile.
 
-> Status: in active development. See [`PROJECT_PLAN.md`](PROJECT_PLAN.md) for phase-by-phase progress.
+## How to run
 
-## What it does
+- **Hosted:** open `https://kyleyhw.github.io/stretch-timer/` (once GitHub Pages is enabled).
+  On mobile, use the browser's _Add to Home Screen_ to install it; it then works offline.
+- **Locally:** from the repo root, start any static server and open it in a browser:
+  ```bash
+  python3 -m http.server 8000   # then open http://localhost:8000
+  ```
+  A server is required — opening `index.html` as a `file://` won't work (ES modules + service worker).
 
-Pick a routine; the app auto-cycles through each stretch, showing a large countdown, a short
-"get ready" prep interval, and overall progress ("Stretch 3 of 12"). It beeps and vibrates
-when a hold ends, handles per-side stretches (hold one side, switch, hold the other), and
-supports pause / resume / skip / back. It ships with a curated library of stretches and lets
-you build and save your own routines locally.
+## How to use
 
-## Design decisions
+- **Start a routine.** Tap a routine on the home screen to preview its stretches, then **Start**.
+- **During a session.** A large countdown shows the time left on the current stretch, with a
+  progress bar and "Stretch N of M". It beeps and vibrates at each change. Controls: **⏮** previous,
+  **Pause/Resume**, **⏭** skip. Per-side stretches run one side then the other. **✕** quits (with a
+  confirm).
+- **Make your own.** Tap **+ New routine**, give it a name, and add stretches (set the seconds for
+  each). You can add a **per-side block** — a group performed on one side, then the other — and
+  reorder or remove items. Edit (**✎**) or duplicate any built-in routine from its page. Your
+  routines are saved on your device.
+- **Settings (⚙).** Adjust get-ready time, switch-sides time, sound, count-in ticks, vibration, and
+  keep-screen-awake.
 
-| Decision    | Choice                  | Rationale                                                       |
-| ----------- | ----------------------- | --------------------------------------------------------------- |
-| Platform    | Vanilla JS PWA          | One codebase for desktop + mobile; installable; offline.        |
-| Build step  | None                    | Native ES modules; GitHub Pages serves authored files verbatim. |
-| Types       | JSDoc + `tsc --checkJs` | Static checking without transpilation.                          |
-| Persistence | `localStorage`          | No backend; user routines stay on-device.                       |
+---
 
-## Directory structure
-
-```
-stretch-timer/
-├── PROJECT_PLAN.md          # phased development plan (status-tagged)
-├── README.md
-├── package.json             # dev deps: typescript, prettier; npm scripts
-├── tsconfig.base.json       # shared strict compiler options
-├── tsconfig.json            # app type-check project (DOM lib)
-├── .prettierrc.json         # formatter config
-├── .pre-commit-config.yaml  # detect-secrets + tsc + prettier gate
-├── .secrets.baseline        # detect-secrets audited baseline
-├── .gitignore
-├── .nojekyll                # disable Jekyll on GitHub Pages
-├── index.html               # single entry; views render into <main>
-├── manifest.webmanifest     # PWA manifest (relative start_url/scope)
-├── sw.js                    # service worker (offline app-shell cache)
-├── css/
-│   └── styles.css
-├── js/
-│   ├── app.js               # bootstrap + service-worker registration
-│   ├── router.js            # hash-based view switching
-│   ├── timer.js             # drift-free countdown engine
-│   ├── session.js           # routine → steps state machine
-│   ├── cues.js              # audio beep, vibration, wake lock
-│   ├── store.js             # versioned localStorage
-│   ├── data.js              # built-in ⊕ user routine merge
-│   ├── seed.js              # built-in stretch/routine library
-│   ├── ui.js                # small DOM helpers
-│   └── views/               # home, routineDetail, player, editor, settings
-├── icons/                   # 192 / 512 / maskable / apple-touch
-├── docs/                    # architecture + mathematical documentation
-└── tests/                   # node:test suites and markdown reports
-```
-
-## Documentation index
-
-- [`docs/index.md`](docs/index.md) — documentation hub
-- [`docs/architecture.md`](docs/architecture.md) — module layers, routing, rendering, PWA
-- [`docs/timer-math.md`](docs/timer-math.md) — drift-free countdown derivation
-- [`docs/data-model.md`](docs/data-model.md) — stretch/routine schema and session expansion
-
-## Core logic and mathematics
-
-The correctness core is the **countdown engine**. Rather than decrementing a counter each frame
-(which accumulates timing jitter), remaining time is computed from a fixed target timestamp.
-Let a phase have duration $D$ and let $\tau(\cdot)$ be a monotonic clock (`performance.now()`).
-Fixing the target at phase start $\tau_0$ as $T = \tau_0 + D$, each frame at clock value $\tau$
-reads
-
-$$r(\tau) = T - \tau, \qquad \text{displayed seconds} = \left\lceil r(\tau)/1000 \right\rceil.$$
-
-Because $r$ depends only on the fixed $T$ and the current reading, the instantaneous error is
-bounded by one frame interval and does not accumulate. The full derivation, the pause/resume
-invariant, the progress fraction, and background-tab reconciliation are documented in
-[`docs/timer-math.md`](docs/timer-math.md).
-
-## Development
-
-```bash
-npm install            # dev tooling (typescript, prettier)
-npm run typecheck      # tsc --checkJs --noEmit over js/
-npm test               # node:test unit suites
-npm run format         # prettier --write
-
-pre-commit install     # enable the commit-time quality gate
-python3 -m http.server # serve locally at http://localhost:8000 (SW + ES modules need a server)
-```
-
-`file://` will not work (ES-module CORS and no service worker) — always use a local server. To
-reproduce the GitHub Pages subpath, serve the parent directory and browse to
-`http://localhost:8000/stretch-timer/`.
-
-## Install and deploy
-
-- **Install to a device:** open the app in a browser and use the address-bar install icon
-  (desktop / Android) or Safari's Share → _Add to Home Screen_ (iOS). It then launches
-  standalone and works offline.
-- **Deploy to GitHub Pages:** enable Pages once (repository Settings → Pages → source **GitHub
-  Actions**). The workflow in [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml)
-  then publishes the repository root on every push to the default branch, serving the app at
-  `https://kyleyhw.github.io/stretch-timer/`. All URLs are relative and the service-worker scope is
-  the subpath, so no configuration depends on the repository name. The `.nojekyll` file keeps Pages
-  from processing the source.
+Design notes, architecture, and the timing math are in [`docs/`](docs/index.md).

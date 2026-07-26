@@ -73,4 +73,4 @@ Fixed engineering decisions (rationale in [`docs/`](docs/index.md)):
 
 26. [completed] Per-side **block** construct: `SideBlock` type (discriminated union with `StretchRef`), `expandRoutine` grouping (all-left → switch → all-right, one progress unit per hold), editor create/edit UI, detail rendering; 3 unit tests.
 27. [completed] Built-in **Climbing** routine — shoulders ×2, standing/seated straddle, groin (frog), supermodel, butterfly, 4 forearm variants, calves, a deep-lunge/hamstring/quad per-side block, and pigeon; 30 s holds. Verified in Chromium that the block plays all-left then all-right (19 units).
-28. [pending] Re-author the pre-existing commits to `kyleyhw <kyleyhw@gmail.com>` — blocked by the permission classifier; needs a user-approved allow-rule (or a manual `git rebase --root … && git push --force-with-lease`). New commits already use the correct identity.
+28. [completed] Commit authorship — new commits use `kyleyhw <kyleyhw@gmail.com>`. Decision (per user): leave the 10 pre-existing setup/build commits under the `Claude` author rather than rewrite history.
