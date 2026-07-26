@@ -1013,6 +1013,13 @@ button {
   flex-shrink: 0;
 }
 
+.editor-add-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
 .editor-error {
   color: var(--danger);
   min-height: 1.2em;
@@ -1129,6 +1136,52 @@ button {
     opacity: 0;
     transform: translateY(12px) scale(0.97);
   }
+}
+
+/* --- Custom-stretch management (Settings) + stretch form modal --- */
+.settings-subhead {
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  margin: 26px 0 0;
+}
+
+.settings-note {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 10px 2px 0;
+}
+
+.stretch-mg-name {
+  display: block;
+  font-weight: 600;
+}
+
+.stretch-mg-area {
+  display: block;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.modal-form {
+  max-width: 400px;
+  max-height: 86vh;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.modal-title {
+  margin: 0 0 16px;
+  font-size: 1.2rem;
+  letter-spacing: -0.01em;
+}
+
+.modal-form .field {
+  margin-bottom: 12px;
+}
+
+.modal-form .setting-row {
+  border-bottom: none;
+  padding: 8px 0 0;
 }
 
 /* --- Reduced motion --- */

@@ -2,9 +2,9 @@
 
 - **Module under test:** [`js/store.js`](../../js/store.js) — the `Store` class.
 - **Suite:** [`tests/store.test.js`](../store.test.js), run with `node --test`.
-- **Date:** 2026-07-25
-- **Result:** 5 / 5 passed, 0 failed. (Full repository suite: 26 / 26.)
-- **Runtime:** 96 ms for the `node --test tests/store.test.js` process, 5 subtests, each < 1 ms.
+- **Date:** 2026-07-26
+- **Result:** 6 / 6 passed, 0 failed. (Full repository suite: 40 / 40.)
+- **Runtime:** ~95 ms for the `node --test tests/store.test.js` process, 6 subtests, each < 1 ms.
 - **Static analysis:** `npm run typecheck` passes with no diagnostics.
 
 ## What was tested and why
@@ -17,6 +17,7 @@ covered deterministically.
 | #   | Test                                           | Why (property verified)                                             | Inputs / rationale                                                                      |
 | --- | ---------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | 1   | Round-trips routines; merges settings          | Serialization is lossless; settings load merges over defaults       | Save one routine and partial settings; read back and check the merge fills missing keys |
+| 6   | Round-trips user stretches                     | The custom-stretch library persists losslessly (M3)                 | Save one custom stretch (per-side); read back and compare                               |
 | 2   | Writes schema meta on init                     | Version marker is present for future migrations                     | Fresh store; read `meta`                                                                |
 | 3   | Non-persistent but usable with no backend      | App still works when `localStorage` is unavailable                  | `new Store(null)`; write then read in-session                                           |
 | 4   | Memory fallback when writes throw              | A quota error degrades to in-memory, and `persistent` reports false | Backend whose `setItem` always throws; write then read                                  |

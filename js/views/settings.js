@@ -4,9 +4,11 @@
  */
 
 import { el, clear, icon } from '../ui.js';
+import { stretchFormModal } from './stretchForm.js';
 
 /** @typedef {import('../settings.js').AppSettings} AppSettings */
 /** @typedef {import('../settings.js').ThemePref} ThemePref */
+/** @typedef {import('../types.js').Stretch} Stretch */
 
 /**
  * @typedef {object} SettingsContext
@@ -14,6 +16,10 @@ import { el, clear, icon } from '../ui.js';
  * @property {(patch: Partial<AppSettings>) => void} onChange
  * @property {() => void} onBack
  * @property {{ vibration: boolean, wakeLock: boolean }} caps Capability flags for optional cues.
+ * @property {() => Stretch[]} getCustomStretches Current custom-stretch library.
+ * @property {(id: string) => boolean} isStretchInUse Whether a routine references the stretch.
+ * @property {(stretch: Stretch) => void} onStretchSave Persist an edited custom stretch.
+ * @property {(id: string) => void} onStretchDelete Delete a custom stretch.
  */
 
 /**
@@ -165,6 +171,58 @@ export function mountSettings(container, ctx) {
     );
   }
 
+  // "Your stretches": manage the custom library (edit/delete). Rebuilt in place after each change.
+  const stretchesList = el('div', { class: 'settings-list' });
+  function renderStretches() {
+    clear(stretchesList);
+    const list = ctx.getCustomStretches();
+    if (list.length === 0) {
+      stretchesList.append(
+        el('p', {
+          class: 'settings-note',
+          text: 'None yet. Create one with "New stretch" while building a routine.',
+        }),
+      );
+      return;
+    }
+    for (const s of list) {
+      const inUse = ctx.isStretchInUse(s.id);
+      const editBtn = /** @type {HTMLButtonElement} */ (
+        el('button', { class: 'mini-btn', 'aria-label': `Edit ${s.name}` }, icon('edit'))
+      );
+      const delBtn = /** @type {HTMLButtonElement} */ (
+        el('button', { class: 'mini-btn', 'aria-label': `Delete ${s.name}` }, icon('close'))
+      );
+      delBtn.disabled = inUse;
+      if (inUse) delBtn.title = 'Used by a routine — remove it there first';
+      editBtn.addEventListener('click', async () => {
+        const data = await stretchFormModal('Edit stretch', s);
+        if (!data) return;
+        ctx.onStretchSave({ id: s.id, ...data });
+        renderStretches();
+      });
+      delBtn.addEventListener('click', () => {
+        ctx.onStretchDelete(s.id);
+        renderStretches();
+      });
+      const meta = s.perSide ? `${s.area || 'Custom'} · per side` : s.area || 'Custom';
+      stretchesList.append(
+        el(
+          'div',
+          { class: 'setting-row' },
+          el(
+            'span',
+            { class: 'setting-label' },
+            el('span', { class: 'stretch-mg-name', text: s.name }),
+            el('span', { class: 'stretch-mg-area', text: meta }),
+          ),
+          el('span', { class: 'editor-item-controls' }, editBtn, delBtn),
+        ),
+      );
+    }
+  }
+  renderStretches();
+
   container.append(
     el(
       'section',
@@ -176,6 +234,8 @@ export function mountSettings(container, ctx) {
         el('h1', { class: 'detail-title', text: 'Settings' }),
       ),
       el('div', { class: 'settings-list' }, rows),
+      el('h2', { class: 'settings-subhead', text: 'Your stretches' }),
+      stretchesList,
     ),
   );
 }

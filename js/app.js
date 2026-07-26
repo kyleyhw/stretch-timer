@@ -22,6 +22,13 @@ import {
   upsertUserRoutine,
   deleteUserRoutine,
   makeUserId,
+  setUserStretches,
+  setStretchPersist,
+  getUserStretches,
+  upsertUserStretch,
+  deleteUserStretch,
+  stretchInUse,
+  makeStretchId,
 } from './data.js';
 import { store } from './store.js';
 import { getSettings, updateSettings, initSettings, DEFAULT_SETTINGS } from './settings.js';
@@ -32,6 +39,8 @@ import { el, clear } from './ui.js';
 // --- Persistence boot ---
 setUserRoutines(store.loadUserRoutines());
 setPersist((list) => store.saveUserRoutines(list));
+setUserStretches(store.loadUserStretches());
+setStretchPersist((list) => store.saveUserStretches(list));
 initSettings(store.loadSettings(DEFAULT_SETTINGS), (s) => store.saveSettings(s));
 applyTheme(getSettings().theme);
 
@@ -101,6 +110,10 @@ function showSettings() {
     },
     onBack: () => router.navigate('/'),
     caps: { vibration: haptics.supported, wakeLock: wakeLock.supported },
+    getCustomStretches: () => getUserStretches(),
+    isStretchInUse: (id) => stretchInUse(id),
+    onStretchSave: (stretch) => upsertUserStretch(stretch),
+    onStretchDelete: (id) => deleteUserStretch(id),
   });
 }
 
@@ -135,6 +148,11 @@ function showEditor(id) {
     stretches: getAllStretches(),
     stretchMap: getStretchMap(),
     canDelete,
+    onCreateStretch: (data) => {
+      const stretch = { id: makeStretchId(), ...data };
+      upsertUserStretch(stretch);
+      return stretch;
+    },
     onSave: (r) => {
       upsertUserRoutine(r);
       router.navigate(`/routine/${r.id}`);

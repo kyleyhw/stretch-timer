@@ -61,6 +61,21 @@ test('round-trips user routines and merges settings', () => {
   });
 });
 
+test('round-trips user stretches', () => {
+  const s = new Store(memBackend());
+  assert.deepEqual(s.loadUserStretches(), []);
+  const custom = {
+    id: 'ustr-1',
+    name: 'My Stretch',
+    area: 'Neck',
+    description: 'do the thing',
+    defaultSeconds: 25,
+    perSide: true,
+  };
+  s.saveUserStretches([custom]);
+  assert.deepEqual(s.loadUserStretches(), [custom]);
+});
+
 test('writes schema meta on init', () => {
   const s = new Store(memBackend());
   assert.deepEqual(s.getJSON(KEYS.meta, null), { schemaVersion: SCHEMA_VERSION });

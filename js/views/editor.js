@@ -5,12 +5,14 @@
  */
 
 import { el, clear, icon } from '../ui.js';
+import { stretchFormModal } from './stretchForm.js';
 
 /** @typedef {import('../types.js').Routine} Routine */
 /** @typedef {import('../types.js').RoutineItem} RoutineItem */
 /** @typedef {import('../types.js').StretchRef} StretchRef */
 /** @typedef {import('../types.js').SideBlock} SideBlock */
 /** @typedef {import('../types.js').Stretch} Stretch */
+/** @typedef {import('./stretchForm.js').StretchFormData} StretchFormData */
 
 /**
  * @typedef {object} EditorContext
@@ -21,6 +23,7 @@ import { el, clear, icon } from '../ui.js';
  * @property {(routine: Routine) => void} onSave
  * @property {() => void} onDelete
  * @property {() => void} onCancel
+ * @property {(data: StretchFormData) => Stretch} onCreateStretch Add a custom stretch; returns it.
  */
 
 /**
@@ -43,6 +46,12 @@ function swap(arr, i, j) {
  */
 export function mountEditor(container, ctx) {
   clear(container);
+
+  // Local, growable copies so a stretch created mid-edit is immediately pickable without a remount.
+  /** @type {Stretch[]} */
+  const library = [...ctx.stretches];
+  /** @type {Record<string, Stretch>} */
+  const stretchMap = { ...ctx.stretchMap };
 
   /** @type {{ id: string, name: string, description: string, builtIn: false, items: RoutineItem[] }} */
   const draft = {
@@ -74,22 +83,28 @@ export function mountEditor(container, ctx) {
 
   const itemsList = el('div', { class: 'editor-items' });
 
-  /** @returns {HTMLSelectElement} A fresh stretch picker grouped by area. */
-  function buildPicker() {
-    const select = el('select', { class: 'field-input' });
+  /** @param {HTMLSelectElement} select Populate (or repopulate) a picker with the library by area. */
+  function populatePicker(select) {
+    clear(select);
     /** @type {Map<string, Stretch[]>} */
     const byArea = new Map();
-    for (const s of ctx.stretches) {
+    for (const s of library) {
       const list = byArea.get(s.area) ?? [];
       list.push(s);
       byArea.set(s.area, list);
     }
     for (const [area, list] of byArea) {
-      const group = el('optgroup', { label: area });
+      const group = el('optgroup', { label: area || 'Other' });
       for (const s of list) group.append(el('option', { value: s.id, text: s.name }));
       select.append(group);
     }
-    return /** @type {HTMLSelectElement} */ (select);
+  }
+
+  /** @returns {HTMLSelectElement} A fresh stretch picker grouped by area. */
+  function buildPicker() {
+    const select = /** @type {HTMLSelectElement} */ (el('select', { class: 'field-input' }));
+    populatePicker(select);
+    return select;
   }
 
   /**
@@ -108,7 +123,7 @@ export function mountEditor(container, ctx) {
    * @returns {HTMLElement}
    */
   function refRow(refItem, ops, sub) {
-    const s = ctx.stretchMap[refItem.stretchId];
+    const s = stretchMap[refItem.stretchId];
     const name = s ? s.name : refItem.stretchId;
     const secInput = /** @type {HTMLInputElement} */ (
       el('input', {
@@ -217,7 +232,7 @@ export function mountEditor(container, ctx) {
     const picker = buildPicker();
     const addBtn = el('button', { class: 'ctrl-btn', text: 'Add to block' });
     addBtn.addEventListener('click', () => {
-      const s = ctx.stretchMap[picker.value];
+      const s = stretchMap[picker.value];
       if (s) {
         blockItem.block.push({ stretchId: s.id, seconds: s.defaultSeconds });
         renderItems();
@@ -280,7 +295,7 @@ export function mountEditor(container, ctx) {
   const topPicker = buildPicker();
   const addStretchBtn = el('button', { class: 'ctrl-btn', text: 'Add' });
   addStretchBtn.addEventListener('click', () => {
-    const s = ctx.stretchMap[topPicker.value];
+    const s = stretchMap[topPicker.value];
     if (s) {
       draft.items.push({ stretchId: s.id, seconds: s.defaultSeconds });
       renderItems();
@@ -295,6 +310,23 @@ export function mountEditor(container, ctx) {
   addBlockBtn.addEventListener('click', () => {
     draft.items.push({ block: [] });
     renderItems();
+  });
+
+  const newStretchBtn = el(
+    'button',
+    { class: 'ctrl-btn' },
+    icon('plus'),
+    el('span', { text: 'New stretch' }),
+  );
+  newStretchBtn.addEventListener('click', async () => {
+    const data = await stretchFormModal('New stretch');
+    if (!data) return;
+    const created = ctx.onCreateStretch(data);
+    library.push(created);
+    stretchMap[created.id] = created;
+    populatePicker(topPicker);
+    topPicker.value = created.id; // created stretch joins the library and is selected
+    renderItems(); // refresh block pickers so the new stretch is pickable there too
   });
 
   const saveBtn = el('button', { class: 'ctrl-btn start-cta', text: 'Save routine' });
@@ -350,7 +382,8 @@ export function mountEditor(container, ctx) {
       ),
       el('h2', { class: 'editor-subhead', text: 'Stretches' }),
       itemsList,
-      el('div', { class: 'editor-add' }, topPicker, addStretchBtn, addBlockBtn),
+      el('div', { class: 'editor-add' }, topPicker, addStretchBtn),
+      el('div', { class: 'editor-add-buttons' }, newStretchBtn, addBlockBtn),
       errorMsg,
       actions,
     ),

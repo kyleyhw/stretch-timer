@@ -10,6 +10,7 @@
  */
 
 /** @typedef {import('./types.js').Routine} Routine */
+/** @typedef {import('./types.js').Stretch} Stretch */
 
 /**
  * @typedef {object} StorageLike
@@ -21,6 +22,7 @@
 const NS = 'stretchTimer.v1';
 export const KEYS = {
   userRoutines: `${NS}.userRoutines`,
+  userStretches: `${NS}.userStretches`,
   settings: `${NS}.settings`,
   meta: `${NS}.meta`,
 };
@@ -132,6 +134,16 @@ export class Store {
   /** @param {Routine[]} list @returns {void} */
   saveUserRoutines(list) {
     this.setJSON(KEYS.userRoutines, list);
+  }
+
+  /** @returns {Stretch[]} */
+  loadUserStretches() {
+    return this.getJSON(KEYS.userStretches, /** @type {Stretch[]} */ ([]));
+  }
+
+  /** @param {Stretch[]} list @returns {void} */
+  saveUserStretches(list) {
+    this.setJSON(KEYS.userStretches, list);
   }
 
   /**
