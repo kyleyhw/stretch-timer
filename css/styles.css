@@ -8,24 +8,24 @@
 :root {
   color-scheme: dark;
 
-  /* Friendly dark slate-navy palette */
-  --bg: #141c2b;
-  --surface: #1c2636;
-  --surface-2: #253044;
-  --elevated: #2d3a50;
-  --text: #eef1f7;
-  --muted: #9aa5b9;
-  --border: rgba(255, 255, 255, 0.09);
-  --border-strong: rgba(255, 255, 255, 0.16);
+  /* Warm dark palette (restored); text carries a soft blue tint */
+  --bg: #141110;
+  --surface: #1e1a17;
+  --surface-2: #29231e;
+  --elevated: #322a24;
+  --text: #cdddf7;
+  --muted: #93a0bd;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.15);
 
-  /* Accent (flat) — original blue */
-  --accent: #2563eb;
-  --accent-strong: #1d4ed8;
+  /* Accent — a soft, friendly blue */
+  --accent: #2f6fe0;
+  --accent-strong: #245ec9;
   --on-accent: #ffffff;
 
   /* Phase hues (distinct at a glance); hold tracks the accent */
   --prep: #cfa06b;
-  --hold: #2563eb;
+  --hold: #2f6fe0;
   --switch: #6faca4;
   --done: #83b88d;
   --danger: #cf7a7a;
@@ -60,11 +60,11 @@
   --muted: #6f655a;
   --border: rgba(0, 0, 0, 0.09);
   --border-strong: rgba(0, 0, 0, 0.16);
-  --accent: #2563eb;
-  --accent-strong: #1d4ed8;
+  --accent: #2f6fe0;
+  --accent-strong: #245ec9;
   --on-accent: #ffffff;
   --prep: #a9762f;
-  --hold: #2563eb;
+  --hold: #2f6fe0;
   --switch: #3a8f87;
   --done: #4f9a63;
   --danger: #c0574f;
@@ -83,11 +83,11 @@
     --muted: #6f655a;
     --border: rgba(0, 0, 0, 0.09);
     --border-strong: rgba(0, 0, 0, 0.16);
-    --accent: #2563eb;
-    --accent-strong: #1d4ed8;
+    --accent: #2f6fe0;
+    --accent-strong: #245ec9;
     --on-accent: #ffffff;
     --prep: #a9762f;
-    --hold: #2563eb;
+    --hold: #2f6fe0;
     --switch: #3a8f87;
     --done: #4f9a63;
     --danger: #c0574f;

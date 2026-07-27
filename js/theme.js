@@ -9,7 +9,7 @@
 /** @typedef {import('./settings.js').ThemePref} ThemePref */
 
 /** Browser-chrome colour per resolved (concrete) theme; matches `--bg` in css/styles.css. */
-const THEME_COLOR = { dark: '#141c2b', light: '#f7f3ec' };
+const THEME_COLOR = { dark: '#141110', light: '#f7f3ec' };
 
 /** @type {MediaQueryList | null} */
 let darkQuery = null;
