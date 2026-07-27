@@ -22,7 +22,7 @@
 
 /** @type {AppSettings} */
 export const DEFAULT_SETTINGS = {
-  prepSeconds: 5,
+  prepSeconds: 3,
   switchSeconds: 3,
   theme: 'dark',
   sound: false,
