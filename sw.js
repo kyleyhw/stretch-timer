@@ -8,7 +8,7 @@
  * page its scope is the repo subpath, exactly covering the app.
  */
 
-const CACHE = 'stretch-v2';
+const CACHE = 'stretch-v3';
 
 const ASSETS = [
   './',
@@ -33,6 +33,8 @@ const ASSETS = [
   'js/views/settings.js',
   'js/views/stretchForm.js',
   'js/views/shareModal.js',
+  'icons/favicon.svg',
+  'icons/favicon-32.png',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/icon-maskable-512.png',
