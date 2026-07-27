@@ -8,15 +8,15 @@
 :root {
   color-scheme: dark;
 
-  /* Warm dark palette */
-  --bg: #141110;
-  --surface: #1e1a17;
-  --surface-2: #29231e;
-  --elevated: #322a24;
-  --text: #f4efe8;
-  --muted: #a79e93;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.15);
+  /* Friendly dark slate-navy palette */
+  --bg: #141c2b;
+  --surface: #1c2636;
+  --surface-2: #253044;
+  --elevated: #2d3a50;
+  --text: #eef1f7;
+  --muted: #9aa5b9;
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.16);
 
   /* Accent (flat) — original blue */
   --accent: #2563eb;
@@ -426,6 +426,30 @@ button {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* Staggered reveal when opening a set — the same entrance the home cards use. */
+.stretch-list > .stretch-row,
+.stretch-list > .stretch-block {
+  animation: card-in var(--dur-3) var(--ease) both;
+}
+.stretch-list > *:nth-child(1) {
+  animation-delay: 40ms;
+}
+.stretch-list > *:nth-child(2) {
+  animation-delay: 80ms;
+}
+.stretch-list > *:nth-child(3) {
+  animation-delay: 120ms;
+}
+.stretch-list > *:nth-child(4) {
+  animation-delay: 160ms;
+}
+.stretch-list > *:nth-child(5) {
+  animation-delay: 200ms;
+}
+.stretch-list > *:nth-child(n + 6) {
+  animation-delay: 240ms;
 }
 
 .stretch-row {
