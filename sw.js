@@ -8,7 +8,7 @@
  * page its scope is the repo subpath, exactly covering the app.
  */
 
-const CACHE = 'stretch-v1';
+const CACHE = 'stretch-v2';
 
 const ASSETS = [
   './',
@@ -18,6 +18,7 @@ const ASSETS = [
   'js/app.js',
   'js/router.js',
   'js/ui.js',
+  'js/theme.js',
   'js/timer.js',
   'js/session.js',
   'js/cues.js',
@@ -30,6 +31,8 @@ const ASSETS = [
   'js/views/player.js',
   'js/views/editor.js',
   'js/views/settings.js',
+  'js/views/stretchForm.js',
+  'js/views/shareModal.js',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/icon-maskable-512.png',
@@ -60,10 +63,43 @@ sw.addEventListener('message', (event) => {
 sw.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== sw.location.origin) return;
-  // App-shell fallback for deep-link navigations (hash routes all resolve to index.html).
+
+  // Navigations: network-first so a fresh deploy is picked up online (all hash routes resolve to
+  // index.html); fall back to the cached shell offline.
   if (req.mode === 'navigate') {
-    event.respondWith(caches.match('index.html').then((r) => r ?? fetch(req)));
+    event.respondWith(
+      (async () => {
+        try {
+          const res = await fetch(req);
+          const cache = await caches.open(CACHE);
+          cache.put('index.html', res.clone());
+          return res;
+        } catch {
+          const cached = await caches.match('index.html');
+          return cached ?? (await fetch(req));
+        }
+      })(),
+    );
     return;
   }
-  event.respondWith(caches.match(req).then((r) => r ?? fetch(req)));
+
+  // Assets: stale-while-revalidate — serve the cache immediately (fast, offline-capable) while
+  // refreshing it in the background, so content changes propagate without a manual cache bump.
+  event.respondWith(
+    (async () => {
+      const cache = await caches.open(CACHE);
+      const cached = await cache.match(req);
+      if (cached) {
+        event.waitUntil(
+          fetch(req)
+            .then((res) => (res && res.ok ? cache.put(req, res.clone()) : undefined))
+            .catch(() => {}),
+        );
+        return cached;
+      }
+      const res = await fetch(req);
+      if (res && res.ok) cache.put(req, res.clone());
+      return res;
+    })(),
+  );
 });

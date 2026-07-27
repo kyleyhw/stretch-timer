@@ -1,6 +1,6 @@
 /*
  * Stretch Timer — design system.
- * Token-driven, dark-first (calm & modern, warm coral/amber accent). Light theme via
+ * Token-driven, dark-first (calm & modern, flat 2D, blue accent). Light theme via
  * :root[data-theme="light"]; "system" follows prefers-color-scheme. All motion respects
  * prefers-reduced-motion (see the bottom of this file).
  */
@@ -18,14 +18,14 @@
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.15);
 
-  /* Muted warm accent (flat) */
-  --accent: #d1785e;
-  --accent-strong: #bd6a51;
-  --on-accent: #1b0d06;
+  /* Accent (flat) — original blue */
+  --accent: #2563eb;
+  --accent-strong: #1d4ed8;
+  --on-accent: #ffffff;
 
-  /* Phase hues (muted, distinct at a glance) */
+  /* Phase hues (distinct at a glance); hold tracks the accent */
   --prep: #cfa06b;
-  --hold: #d1785e;
+  --hold: #2563eb;
   --switch: #6faca4;
   --done: #83b88d;
   --danger: #cf7a7a;
@@ -60,11 +60,11 @@
   --muted: #6f655a;
   --border: rgba(0, 0, 0, 0.09);
   --border-strong: rgba(0, 0, 0, 0.16);
-  --accent: #bd6349;
-  --accent-strong: #a5523b;
-  --on-accent: #fff7f2;
+  --accent: #2563eb;
+  --accent-strong: #1d4ed8;
+  --on-accent: #ffffff;
   --prep: #a9762f;
-  --hold: #bd6349;
+  --hold: #2563eb;
   --switch: #3a8f87;
   --done: #4f9a63;
   --danger: #c0574f;
@@ -83,11 +83,11 @@
     --muted: #6f655a;
     --border: rgba(0, 0, 0, 0.09);
     --border-strong: rgba(0, 0, 0, 0.16);
-    --accent: #bd6349;
-    --accent-strong: #a5523b;
-    --on-accent: #fff7f2;
+    --accent: #2563eb;
+    --accent-strong: #1d4ed8;
+    --on-accent: #ffffff;
     --prep: #a9762f;
-    --hold: #bd6349;
+    --hold: #2563eb;
     --switch: #3a8f87;
     --done: #4f9a63;
     --danger: #c0574f;
