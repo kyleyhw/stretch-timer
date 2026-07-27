@@ -8,7 +8,7 @@
  * page its scope is the repo subpath, exactly covering the app.
  */
 
-const CACHE = 'stretch-v6';
+const CACHE = 'stretch-v7';
 
 const ASSETS = [
   './',
