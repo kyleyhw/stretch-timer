@@ -8,7 +8,7 @@
  * page its scope is the repo subpath, exactly covering the app.
  */
 
-const CACHE = 'stretch-v4';
+const CACHE = 'stretch-v5';
 
 const ASSETS = [
   './',
@@ -39,6 +39,10 @@ const ASSETS = [
   'icons/icon-512.png',
   'icons/icon-maskable-512.png',
   'icons/apple-touch-icon.png',
+  'fonts/inter-latin-400-normal.woff2',
+  'fonts/inter-latin-500-normal.woff2',
+  'fonts/inter-latin-600-normal.woff2',
+  'fonts/inter-latin-700-normal.woff2',
 ];
 
 // `self` in a service worker is a ServiceWorkerGlobalScope; alias it so the type checker exposes

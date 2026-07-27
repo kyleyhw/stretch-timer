@@ -3,7 +3,39 @@
  * Token-driven, dark-first (calm & modern, flat 2D, blue accent). Light theme via
  * :root[data-theme="light"]; "system" follows prefers-color-scheme. All motion respects
  * prefers-reduced-motion (see the bottom of this file).
+ *
+ * Inter (SIL Open Font License) is self-hosted in /fonts and precached by the service worker, so it
+ * loads offline with no build step or external request. It falls back to the system UI sans.
  */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/inter-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../fonts/inter-latin-500-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../fonts/inter-latin-600-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/inter-latin-700-normal.woff2') format('woff2');
+}
 
 :root {
   color-scheme: dark;
@@ -110,6 +142,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family:
+    'Inter',
     system-ui,
     -apple-system,
     'Segoe UI',
