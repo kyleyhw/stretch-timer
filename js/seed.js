@@ -276,6 +276,51 @@ export const STRETCHES = [
     defaultSeconds: 30,
     perSide: true,
   },
+  // Hands & fingers (climbing)
+  {
+    id: 'wrist-circles',
+    name: 'Wrist Circles',
+    area: 'Wrists',
+    description: 'Circle both wrists slowly, several times in each direction, to warm the joints.',
+    defaultSeconds: 15,
+    perSide: false,
+  },
+  {
+    id: 'finger-spread',
+    name: 'Finger Spread',
+    area: 'Hands & fingers',
+    description:
+      'Spread all five fingers as wide as you can and hold; feel the palm and back of the hand.',
+    defaultSeconds: 20,
+    perSide: false,
+  },
+  {
+    id: 'finger-flexor',
+    name: 'Finger Flexor Stretch',
+    area: 'Hands & fingers',
+    description:
+      'Arm out, palm up; with the other hand gently draw all four fingers back and down toward the floor.',
+    defaultSeconds: 25,
+    perSide: true,
+  },
+  {
+    id: 'lumbrical-stretch',
+    name: 'Lumbrical Stretch',
+    area: 'Hands & fingers',
+    description:
+      'Make a loose hook — bend the middle and top knuckles while keeping the base knuckles straight — and press gently with the other hand.',
+    defaultSeconds: 20,
+    perSide: true,
+  },
+  {
+    id: 'thumb-stretch',
+    name: 'Thumb Stretch',
+    area: 'Hands & fingers',
+    description:
+      'Gently draw the thumb back and away from the palm with the other hand until you feel a stretch at its base.',
+    defaultSeconds: 20,
+    perSide: true,
+  },
 ];
 
 /**
@@ -333,6 +378,23 @@ export const ROUTINES = [
       ref('calf-wall', 30),
       block([ref('hip-flexor-lunge', 30), ref('hamstring-standing', 30), ref('quad-standing', 30)]),
       ref('pigeon', 30),
+    ],
+  },
+  {
+    id: 'climbing-hands',
+    name: 'Climbing Hands',
+    description: 'Forearm, wrist and finger mobility for climbers — warm up or recover the grip.',
+    builtIn: true,
+    items: [
+      ref('wrist-circles', 15),
+      ref('forearm-palm-up', 30),
+      ref('forearm-palm-down', 30),
+      ref('forearm-fingers-up', 30),
+      ref('forearm-fingers-down', 30),
+      ref('finger-spread', 20),
+      ref('finger-flexor', 25),
+      ref('lumbrical-stretch', 20),
+      ref('thumb-stretch', 20),
     ],
   },
   {
